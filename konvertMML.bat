@@ -1,0 +1,1 @@
+asar --no-title-check "settings.asm" "output.spc"

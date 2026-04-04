@@ -1,0 +1,15 @@
+New VCMDs to Hect:
+
+FF 00 xx	;something envelope (skip)
+FF 01 xx	;something envelope (skip)
+FF 02 xx	;something envelope (skip)
+FF 03 xx 	;Channel ADSR envelope (skip)
+FF 04 xx	;Channel ADSR release (skip)
+FF 05 xxxx	;Jump to next position
+FF 06 xx	;Loop break
+FF 07 xxxx 	;Permanent jump to position [$00] (increment track up to $00-$07)
+FF 08 xx	;Set loop count for upcoming loop end
+FF 09 xxxx	;Jump back to location until loop count from FF 08 passed
+FF 0F xx yy ;Surround flags (left;right)
+
+

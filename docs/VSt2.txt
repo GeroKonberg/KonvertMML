@@ -1,0 +1,54 @@
+
+N-SPC/Sting
+sequencing format 2
+(e.g. Treasure Hunter G)
+
+01-7F
+80-C7	Notes
+C8 xx		Set duration (next notes)
+C9 xx		Tie with custom duration
+CA 			Rest
+
+D0 xx			Program change
+D1 xx			Global volume
+D2 xx			ADSR(1)
+D3 xx			ADSR(2)
+D4 xx			GAIN (release)
+D5 				Restore ADSR (-> $F4 $09)
+D6 xy			Set quantization (qXY)
+D7 xx			Pan
+D8 xx yy		Pan fade
+D9 xx			Tempo
+DA xx yy		Tempo fade
+DB xx			Volume
+DC xx yy		Volume fade
+DD xx yy zz		Tremolo on
+DE xx yy		Panning LFO (not in AMK)
+DF				Panning LFO off (not in AMK)
+E0				Tremolo off
+E1 xx			Global transpose
+E2 xx			Channel transpose
+E3 xx			Fine tuning
+E4 xx yy zz		Vibrato on
+E5				Vibrato off
+E6 xx			Pitch base (???, skip)
+E7 xx xx yy		Pitch bend
+E8				Legato on
+E9				Legato off
+EA xx			Echo delay
+EB xx			Echo feedback
+EC xx			Echo FIR (default to 01)
+ED xx			Echo Volume L/R
+EE				Echo on
+EF				Echo off
+F0 ??			Noise note
+F1 ?? ??		Noise fade
+F2				Noise off
+F3				Pitch mod on
+F4				Pitch mod off
+F5 xxXX			Loop (terminate track here!)
+F6 xxXX			Call macro (once) [
+F7 				End macro ]
+F8 xx 			Loop start (store repeats for later) [[
+F9 xx			Loop end (put repeats afterwards) ]]
+

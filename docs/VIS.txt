@@ -1,0 +1,46 @@
+
+N-SPC/Intelligent Systems
+sequencing format
+
+80-C7			Notes
+C8				Tie
+C9				Rest
+CA-D9			Drum kit notes
+
+
+DA xx			Program change
+DB xx			Panning
+DC xx yy		Pan fade
+DD xx yy zz		Vibrato
+DE				Vibrato off
+DF xx			Global volume
+E0 xx yy		Global volume fade
+E1 xx			Tempo
+E2 xx yy		Tempo fade
+E3 xx			Global transpose
+E4 xx			Track transpose
+E5 xx yy zz		Tremolo on
+E6				Tremolo off
+E7 xx			Volume
+E8 xx yy		Volume Fade
+E9 xxxx yy 		Call subroutine
+EA xx			Vibrato fade
+EB xx yy zz		Pitch env 1
+EC xx yy zz		Pitch env 2
+ED				Pitch env off
+EE xx			Finetune
+EF xx yy zz		Echo param 1
+F0				Echo off
+F1 xx yy zz		Echo param 2
+F2 xx yy zz		Echo fade
+F3 xx yy zz		Pitch bend
+F4 xx			Percussion base
+F5				Echo on
+F6				Echo off
+F7 xx yy		Set ADSR
+F8 xx			GAIN (Release Rate)
+F9				Unknown (Rest above?)
+FA xx			Define voice param
+FB xx			Call voice param
+FC-FF			(skip)
+

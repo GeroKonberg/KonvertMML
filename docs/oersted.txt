@@ -1,0 +1,73 @@
+Header format:
+00-FE		Instrument SRC index, keep incrementing
+FF xx		Amount of channels to read, copy for comparison
+(copy to ReadPat)
+0E 00 | F8 00 | D6 02 | 62 03 
+E8 03 | 7D 04 | 66 05 | 58 06
+2-byte relative pointers for each channel 
+
+
+VCMD Format
+
+
+
+00			End track
+01-7F		Note delta
+80-C7
+
+CA-D9		Drum kit
+
+DA ??
+DB xx		Release volume (retrigger on rest, FF-80 decrement)
+DC ??
+DD ??
+DE ??
+DF xx		Tempo
+E0 xx
+E1 xx		Global volume
+E2 xx yy zz
+E3 xx		Echo volume
+E4 ??
+E5 xx		Echo panning
+E7 xx yy zz Echo param ($F1) [delay,feedback,FIR]
+E8 xx		SRC instrument 
+E9 xx		Drum offset (skip this)
+EA xx		Transpose (key)
+EB xx		Volume
+EC ??		Vol fade
+ED xx		Panning (L F6-FF 00 - R 01-0A), add $0A to this
+EE ??		Pan fade
+EF			Echo enable
+F0			Echo disable
+F1			Fine detune
+F2 aa bb cc dd	Vibrato on (delay C0-FF, fade [skip], speed FF-80, depth 01-7F)
+F3			Vibrato off
+F4 aa bb cc	dd	Tremolo on (delay C0-FF, speed FF-80, depth 01-7F)
+F5			Tremolo off
+F6 xx xx	Set portamento (skip until $DD)
+F7			Enable portamento (&)
+F8			Disable portamento
+F9 xx		Quantisizer (11-63; all others activate legato)
+FA			Enable legato (next note)
+FB			Disable legato (after note)
+FC xxxx yy	Subroutine (x=relative pointer,y=amount to repeat), ends with track end marker 00 [see $EF]
+FD xx		Start loop bracket (xx = amount of loops)
+FE			End loop bracket
+FF xx xx 	Jump (relative), mark track as read
+
+LEGATO (Ganso Pachi-Slot Nihonichi)
+F6 00 F1	;pitch bend/porta delay, duration (C0-FF, C0-FF, etc.)
+FA			;enable legato
+28 AF		;duration w note
+F7			;enable portamento
+0E			;delta duration = tie
+FB			;disable legato
+A1			;target note
+F8			;disable portamento
+
+LEGATO (Final Fight 3)
+F6 F4 F4
+F7 60 B4 F8
+
+
+

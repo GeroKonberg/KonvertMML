@@ -1,0 +1,48 @@
+NOTE FORMAT:
+
+$00-$5F xx		Note with duration
+$80-$DF			Note (re-use duration)
+
+$00-$7F xx		Quantization (qxF) [7F=Legato] with Velocity ($E7$xx)
+$80-$FF			Velocity (7%1->7%0)
+
+e.g. 26 0C 19 78		-> $E7$F8q19o2d=12
+
+VCMD FORMAT:
+$60				Percussion on			-> Enable percussion flag
+$61				Percussion off			-> Disable percussion flag
+$62-$7F			Instant tuning			-> {skip?}
+
+$E0 xx			Rest					-> 'r=xx{dec}'
+$E1 xxyy		Tie						-> '^=xx{dec}'
+$E2 xx			Prog change				-> '$DA$xx'
+$E3 xx			Pan						-> '$DB$xx{/2}'
+$E4 xxyyzz		Vibrato on				-> '$DE$xx$yy$zz' [may need conversion?]
+$E5 ??			Pitch type
+$E6				Loop start #1			-> ' [[ '
+$E7 xxyyzz		Loop end #1				-> ' ]]xx'
+$E8				Loop start #2			-> ' [[ '
+$E9 xxyyzz		Loop end #2				-> ' ]]xx'
+$EA	xx			Tempo					-> '$E2$xx{conv}' [special conversion required]
+$EB xxyy		Tempo fade				-> '$E3$xx$yy{conv}'
+$EC xx			Transpose				-> 'h{+/-}xx{dec}'
+$ED xxyy		ADSR					-> '$ED$xx$yy'
+$EE xx			Volume					-> '$FA$03$xx'
+$EF xxyy		Volume fade				-> '$E8$xx$yy'
+$F0 xx			Portamento				-> {skip1}
+$F1 xxyyzzaabb	Pitch envelope			-> '$F1$xx$yy$zz'
+$F2 ??			Tuning
+$F3 xxyyzzaabb	Pitch bend				-> '$DD$xx$yy$zz'
+$F4 ffllrr		Echo param 1			-> '$EF$ff$ll$rr'
+$F5 xxyyzz		Echo param 2			-> '$EF$xx$yy$01'
+$F6				Volta loop start #1		-> '({CH}{CH}{CH})['
+$F7				Volta loop start #2		-> ']' (if $F6 was activated beforehand)
+										-> '({CH}{CH}{CH})01' (afterwards)
+$F8 xxyy		Pan fade				-> '$DC$xx{/2}$yy'
+$F9 ??			Vibrato fade
+$FA xxyyzz		ADSR+GAIN				-> '$ED$xx$yy'
+$FB ??			ADSR2
+$FC xxyy		Program change + volume	-> '$FA$03$xx$DA$yy'
+$FD				Jump					-> {force-terminate current track}
+$FE xxyy		Pattern play			-> '[' (enable pattern flag), backup and jump to addr
+$FF				Pattern end				-> ']' (disable pattern flag), terminate otherwise

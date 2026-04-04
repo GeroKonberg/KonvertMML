@@ -1,0 +1,59 @@
+
+N-SPC/Pure Sound
+sequencing format
+
+Example:
+$1C00:	08 1C ;jump to $1C08
+$1C08:	06 32 03 ;echo delay, echo feedback, FIR (write from table)
+		-> $F1 $06 $32 [$F5 FIRTable]
+		FIR0: 7F 00 00 00 00 00 00 00
+		FIR1: 58 BF DB F0 FE 07 0C 0C
+		FIR2: 0C 21 2B 2B 13 FE F3 F9
+		FIR3: 34 33 00 D9 E5 01 FC EB
+	
+$1CBB:	One-Time Word Pointer Index, 8 channels at most
+BB 1C | EB 1E | 33 20 | 1E 21 | 
+48 22 | 21 25 | 20 26 | 62 27 | 
+
+$00					Terminate pattern
+$01-$54	xx ($F9)	Note, followed by length
+$55 xx				Rest, followed by length
+$56 xx				Tie  followed by length
+
+If $F9 (Slur) was found within a note, enable LegatoFlag and precede the note by $F4 $01 earlier.
+If LegatoFlag is activated and $F9 is no longer the third byte, disable LegatoFlag and set $F4 $01 afterwards.
+
+
+
+$E0 xx			Instrument (-> DA xx)
+$E1 xx			Panning (-> DB xx)
+$E2 xx yy		Pan fade (-> DC xx yy)
+$E3 xx yy		Vibrato on (-> DE yy yy xx)
+$E4				Vibrato off (-> DF)
+$E5 xx			Global volume (-> E0 xx)
+$E6 xx yy		Global volume fade (-> E1 xx yy)
+$E7 xx			Tempo (-> E2 xx)
+$E8 xx yy		Tempo fade (-> E3 xx yy)
+$E9 xx			Global Transpose (-> E4 xx)
+$EA xx			Channel Transpose (-> FA {#$02} xx)
+$EB xx yy		Bypass ADSR (-> $ED xx yy), xx without highest bit
+$EC xx yy
+$ED xx yy		Channel volume (-> E7 xx)
+$EE xx yy		Channel volume fade (-> E8 xx yy)
+$EF
+$F0 xx yy		Portamento -> (skip3 for now)
+$F1 xx xx		Echo volume (L,R) -> [F1 {bitFlag} (vL vR)]
+$F2 xx			Echo channels (write to bitFlag to be used by $F1, don't convert)
+$F3 xx yy zz
+$F4 xx yy
+
+
+$F4 xx yy		Note quantifier [0-7] -> (Base1: {q}y{F}, with $FA: {q}x{F)
+$F9				Slur to next note
+$FA				Use variant 2 of note quantifier for next note.
+$FB				Loop start (-> [)
+$FC xx YY		Jump to little endian pointer
+$FE xx			Loop end (-> ]xx)
+
+´
+

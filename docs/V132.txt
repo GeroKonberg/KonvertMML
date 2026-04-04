@@ -1,0 +1,57 @@
+
+N-SPC/Kennosuke Suemura
+sequencing format
+
+Example:
+> 1. One-Time Word Pointer Index, 8 channels at most
+94 28 | 9E 28 | A8 28 | B2 28 |
+BC 28 | C6 28 | D0 28 | DA 28 | 
+
+> 2. Main Track, primarily used for director
+D6 E0 28 01 | DD | D6 21 29 FF | DE 
+D6 05 2D 01 | DD | D6 21 2D FF | DE 
+D6 C3 2E 01 | DD | D6 E3 2E FF | DE 
+D6 FA 30 01 | DD | D6 23 31 FF | DE
+D6 96 32 01 | DD | D6 B6 32 FF | DE
+D6 23 34 01 | DD | D6 31 34 FF | DE
+D6 2A 35 01 | DD | D6 41 35 FF | DE
+DD | D6 45 37 FA | DE
+
+
+$00				Terminate pattern
+$01-$7F			Note duration
+$80-$C7			Note pitch
+$C8				Tie
+$C9				Rest
+$CA-D4			Drum Kit
+$D5 xx			SRC program change (-> $DA xx)
+$D6 xxXX yy		Call Routine {aka $EF}
+	x = big endian word pointer (E0 28 -> jump to $28E0 and save addr)
+	y = how many times to repeat [insert data](y)
+
+$D7 xx			Volume (-> $E7 xx)
+$D8 xx yy		Bypass ADSR (-> $ED xx yy), xx without highest bit
+$D9	xx			Panning (-> $DB xx)
+$DA xx yy		Pan fade (-> $DC xx yy)
+$DB xx			Global Transpose (-> $E4 xx)
+$DC xx			Channel Transpose (-> $FA {$02} xx)
+$DD				Set loop point -> /
+$DE				Return to loop point ($DD), go to next track afterwards
+$DF xx			Tempo (-> $E2)
+$E0 xx yy zz	Pitch bend (-> $DD)
+$E1 xx yy zz	Vibrato On (-> $DE)
+$E2				Vibrato Off (-> $DF)
+$E3 xx			Unknown (-> skip)
+$E4 xx			Unknown (-> skip)
+$E5 xx			Unknown (-> skip)
+$E6-$F5			Velocity 2 (-> q70-q7F)
+$F6 xx yy zz	Echo param 1 (-> $EF)
+$F7				Disable echo (-> $F0)
+$F8 xx yy zz	Echo param 2 (-> $F1)
+$F9				Activate echo
+$FA
+$FB xx yy
+$FC xx
+$FD [$00, out of bound?]
+$FE [$0C, out of bound?]
+$FF [$18, out of bound?]
