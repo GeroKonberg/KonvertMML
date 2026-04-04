@@ -1,0 +1,1 @@
+asar --no-title-check "am2nspc.asm" "output.spc"

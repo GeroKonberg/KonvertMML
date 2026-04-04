@@ -1,0 +1,1 @@
+asar --no-title-check "am1011-2nspc.asm" "output.sfc"

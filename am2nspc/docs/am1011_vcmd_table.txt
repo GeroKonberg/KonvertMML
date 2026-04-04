@@ -1,0 +1,44 @@
+AddmusicK			N-SPC
+00-7F	keep 
+80-C5	keep
+C6					-> C8 (Tie)
+C7					-> C9 (Rest)
+C8-DA				-> CA-DC (Percussion Notes)
+$DA xx				-> $E0 xx ✅
+$DB xx				-> $E1 xx ✅
+$DC xx yy			-> $E2 xx ✅
+$DD xx yy zz		-> $F9 xx yy zz ✅
+$DE xx yy zz		-> $E3 xx yy zz ✅
+$DF					-> $E4 ✅
+$E0 xx				-> $E5 xx ✅
+$E1 xx yy			-> $E6 xx yy ✅
+$E2 xx				-> $E7 xx ✅
+$E3 xx yy			-> $E8 xx yy ✅
+$E4 xx				-> $E9 xx ✅
+$E5 xx yy zz		-> $EB xx yy zz ✅
+$E6 xx				-> (unroll data instead)
+$E7 xx				-> $ED xx ✅
+$E8 xx yy			-> $EE xx yy
+$E9 xxxx yy			-> $EF xxxx yy
+$EA xx				-> $F0 xx ✅
+$EB xx yy zz		-> $F1 xx yy zz ✅
+$EC xx yy zz		-> $F2 xx yy zz ✅
+$ED xx yy			-> (skip)
+$EE xx				-> $F4 xx ✅
+$EF xx yy zz		-> $F5 xx yy zz ✅
+$F0					-> $F6 ✅
+$F1 xx yy zz		-> $F7 xx yy zz ✅
+$F2 xx yy zz		-> $F8 xx yy zz ✅
+$F3 xx yy			-> (skip)
+$F4 xx				-> (skip)
+$F5 x8				-> (skip)
+$F6 xx yy			-> (skip)
+$F7 ??				-> (skip)
+$F8 xx				-> (skip)
+$F9 xx yy			-> (skip)
+$FA $02 xx			-> $EA xx ✅
+$FA xx yy			-> (skip) ✅
+$FB xx yy zz		-> (skip)
+$FC ww xx yy zz		-> (skip)
+$FD					-> $EC
+$FE					-> $F3
