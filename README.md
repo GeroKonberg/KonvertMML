@@ -7,7 +7,4 @@ This batch repository comes bundled in with a variety of stock and extended sequ
 
 Once the given input has been patched accordingly, the sound driver will continue to read music data and be bypassed to instead translate every given hex command into AddmusicK's text format which then can be inserted for SMW hacks on success. Since the original music player and language is recycled for this purpose, it is currently the closest known method for accurate direct translations available, not accounting for missing commands and/or other technical issues that may occur with the #amk 4 parser at the moment.
 
-Here's an example of konvertMML attempting to translate SimCity and SimCity Jr. respectively:
-- https://www.youtube.com/watch?v=T_k4LL4gZmE
-
 2026 Gero Konberg Foundation et al.
