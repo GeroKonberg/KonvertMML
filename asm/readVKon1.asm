@@ -232,7 +232,7 @@ ReadSequence:
 +	movw ya,DPatRuntime 
 	cmpw ya,DPatMirror
 	bne ++
-;	jmp ForceInterrupt
+	jmp ForceInterrupt
 ++	mov y,#$00
 	mov a,(ReadSeq)+y
 	bne +
@@ -466,6 +466,7 @@ PresetVCMDIndex:
 	dw VoiceCommandParam ;ff
 
 VCMDKonLoopStart:
+	mov DPSubFlag,#$02 ;mark loop
 	mov a,#$20 ;start double bracket
 	call RoutineWriter
 	mov a,#$5b ;start double bracket
@@ -483,14 +484,11 @@ VCMDKonLoopEnd:
 	call RoutineWriter
 	mov a,#$5d ;end double bracket
 	call RoutineWriter
-	mov a,#$5d ;end double bracket
-	call RoutineWriter
 	inc y
 	mov a,(ReadSeq)+y
-	call RoutineHexDecimal
-	inc y ;skip unknown 
-	inc y
-	inc y
+	mov DPSubFlag,a
+	call RoutineCloseLoop
+	mov y,#$04 ;skip unknown 
 	call RoutineUpdateWord
 	jmp ReadSequence
 	
