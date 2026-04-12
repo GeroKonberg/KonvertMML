@@ -65,8 +65,6 @@ DPQuant:
 skip 1
 DPBypass:
 skip 1
-
-
 DPatRuntime: ;calculate pattern length on runtime for comparisons
 skip 2
 DPatSubtime: ;calculate pattern length on subtime for comparisons
@@ -81,6 +79,7 @@ base !OutAddr
 	db $20
 	db $20
 	db "#0 "
+
 
 org !ProgAddr+256
 base !ProgAddr ;bypass driver code with a converter
@@ -121,10 +120,12 @@ KonvertInit:
 	movw WriteOut,ya
 	jmp KonvertReadPattern
 
+
 KonvertSet:
 	dw !ReadAddr
 	db !ReadIndex
 	dw !OutAddr+32
+
 
 KonvertReadPattern:
 	;read 2 byte pattern pointer
@@ -167,11 +168,7 @@ KonvertReadPattern:
 	mov x,a
 	mov a,PresetHex+x
 	call RoutineWriter
-;-	nop
-;	bra -
 -	jmp KonvertReadPattern
-
-
 +++	dec y
 	mov a,(ReadSeq)+y
 	push a
@@ -180,7 +177,6 @@ KonvertReadPattern:
 	mov y,a
 	pop a
 	movw ReadSeq,ya
-
 	;read 2x8 pattern index from channel 0-7
 	mov a,ReadTrackX
 	asl a
@@ -244,7 +240,6 @@ ReadSequence:
 	bmi -
 	or a,#$80
 	jmp VoiceCommandRun
-
 
 
 VoiceInterrupt: ;00
@@ -324,39 +319,7 @@ VoiceNoteEvent: ;01-DF
 	mov DPNoteTens,#$00
 	mov DPNoteHund,#$00
 	mov a,DPNoteLength ;convert hex to decimal length (up to =127 supported)
--	cmp a,#$0b
-	bmi +
-	inc DPNoteTens
-	setc
-	sbc a,#$0a
-	bra -
-+	mov DPStack,a
-	mov a,DPNoteTens
-	xcn a
-	clrc
-	adc a,DPStack
-	daa a
-	bcc +
-	inc DPNoteHund
-+	mov DPNoteTens,a
-	mov a,DPNoteHund
-	beq +
-	mov x,a
-	mov a,PresetHex+x
-	call RoutineWriter ;write hundreds (if given)
-+	mov a,DPNoteTens
-	and a,#$f0
-	xcn a
-	beq +
-	mov x,a
-	mov a,PresetHex+x
-	call RoutineWriter ;write tens (if given)
-+	mov a,DPNoteTens
-	and a,#$0f
-	mov x,a
-	mov a,PresetHex+x
-	call RoutineWriter ;write ones (mandatory)
-
+	call RoutineHexDecimal
 	inc y
 	call RoutineUpdateWord
 	call RoutineMeasurePat
@@ -364,7 +327,8 @@ VoiceNoteEvent: ;01-DF
 	jmp ReadSequence
 -	nop
 	bra -
-	
+
+
 VoiceCommandRun: ;E0-FF
 	mov DParamSize,#$00
 	and a,#$1f
@@ -399,12 +363,9 @@ VoiceCommandParam:
 	jmp ReadSequence
 
 
--	nop
-	bra -
-
-
 PresetHex: ;direct hex to ascii conversion table
 	db "0123456789ABCDEF"
+
 
 PresetNotes: ;note definition per octave
 	db "c",$00
@@ -420,6 +381,7 @@ PresetNotes: ;note definition per octave
 	db "a+"
 	db "b",$00
 
+
 PresetVCMD: ;N-SPC to SMW VCMD conversion table [$E0-$FF]
 			;if zero, the writer will skip it immediatly
 	db $DA ;instrument
@@ -430,11 +392,11 @@ PresetVCMD: ;N-SPC to SMW VCMD conversion table [$E0-$FF]
 	db $DF ;vibrato off
 	db $E0 ;song volume
 	db $E1 ;song volume fade
-	db $E2 ;tempo
+	db $00 ;tempo (t)
 
 	db $E3 ;tempo fade
 	db $E4 ;global transposition
-	db $00 ;($FA $02) channel transposition 
+	db $00 ;channel transposition (h)
 	db $E5 ;tremolo on
 
 	db $FD ;tremolo off
@@ -442,14 +404,12 @@ PresetVCMD: ;N-SPC to SMW VCMD conversion table [$E0-$FF]
 	db $E8 ;volume fade
 	db $00 ;subroutine (handle externally)
 
-
-
 	db $EA ;vibrato fade
 	db $EB ;pitch env to
 	db $EC ;pitch env from
 	db $FE ;pitch enb disable
 
-	db $EE ;fine etune
+	db $EE ;fine detune
 	db $EF ;echo p1
 	db $F0 ;echo off
 	db $F1 ;echo p2
@@ -462,8 +422,9 @@ PresetVCMD: ;N-SPC to SMW VCMD conversion table [$E0-$FF]
 	db $00 ;
 	db $00 ;
 	db $00 ;
-	db $00 ;
-	
+	db $ED ;ADSR envelope
+
+
 PresetVCMDIndex:
 	dw $0100 ;e0
 	dw $0100 ;e1
@@ -473,7 +434,7 @@ PresetVCMDIndex:
 	dw $0000 ;e4
 	dw $0100 ;e5
 	dw $0200 ;e6
-	dw $0100 ;e7
+	dw VCMDTempo ;e7
 
 	dw $0200 ;e8
 	dw $0100 ;e9
@@ -493,29 +454,89 @@ PresetVCMDIndex:
 	dw $0100 ;f4
 	dw $0300 ;f5
 	dw $0000 ;f6
-	dw $0300 ;f7
+	dw VCMDEchoSetup ;f7
 
 	dw $0300 ;f8
 	dw VCMDBend ;f9
-	dw VCMDSkip1 ;fa percussion base (skip)
-	dw VoiceCommandParam ;fb
+	dw VCMDSkip1 ;fa
+	dw VCMDSkip3 ;fb
 
-	dw VoiceCommandParam ;fc
+	dw VCMDSkip1 ;fc
 	dw VCMDSkip1 ;fd
-	dw VoiceCommandParam ;fe
-	dw VoiceCommandParam ;ff
+	dw VCMDSkip1 ;fe
+	dw VCMDEnvelope ;ff
 
-VCMDPorta:
-	mov a,#$26 ;and sign
-	call RoutineWriter
-	mov DPNoteOctave,#$01
-	inc y
-	mov a,(ReadSeq)+y
-	and a,#$7f
-	call RoutineGetNote
+
+FinishCom:
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
+
+
+VCMDTempo:
+	mov a,#$74 ;t
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	dec a ;adapt tempo for carry
+	call RoutineHexDecimal
+	bra FinishCom
+
+
+VCMDEchoSetup:
+	inc y
+	mov a,(ReadSeq)+y ;delay
+	call RoutineWriteHex
+	inc y
+	mov a,(ReadSeq)+y ;feedback
+	call RoutineWriteHex
+	inc y
+	mov a,(ReadSeq)+y ;FIR filter
+	bne +++
+	inc a
+--- call RoutineWriteHex
+	bra FinishCom
++++	and a,#$03
+	xcn a
+	lsr a
+	mov x,a
+	mov a,#$01
+	call RoutineWriteHex
+	mov a,#$f5 ;setup FIR preset
+	call RoutineFIREntry
+	call RoutineFIREntry
+	call RoutineFIREntry
+	call RoutineFIREntry
+	call RoutineFIREntry
+	call RoutineFIREntry
+	call RoutineFIREntry
+	call RoutineFIREntry
+	bra ---
+
+
+RoutineFIREntry:
+	call RoutineWriteHex
+	mov a,PresetFIRs+x
+	inc x
+	ret
+
+
+VCMDEnvelope:
+	inc y
+	mov a,(ReadSeq)+y ;attack/decay
+	call RoutineWriteHex
+	inc y
+	mov a,(ReadSeq)+y ;release
+	mov DPSum1,a
+	inc y
+	mov a,(ReadSeq)+y ;sustain level
+	xcn a
+	asl a
+	clrc
+	adc a,DPSum1
+	call RoutineWriteHex
+	bra FinishCom
+
 
 VCMDBend:
 	inc y
@@ -529,9 +550,8 @@ VCMDBend:
 	clrc
 	adc a,DPNoteTrans ;adapt note for transposition
 	call RoutineWriteHex
-	inc y
-	call RoutineUpdateWord
-	jmp ReadSequence
+	jmp FinishCom
+
 
 VCMDTranspose: ;fa 02 -> hx (V120)
 	mov a,#$68 ;h
@@ -547,9 +567,7 @@ VCMDTranspose: ;fa 02 -> hx (V120)
 	setc
 	sbc a,DPStack2
 +	call RoutineHexDecimal
-	inc y
-	call RoutineUpdateWord
-	jmp ReadSequence
+	jmp FinishCom
 
 
 VCMDSubroutine:
@@ -577,8 +595,12 @@ VCMDSubroutine:
 +++	jmp ForceInterrupt
 
 
+VCMDSkip3:
+	inc y
+VCMDSkip2:
+	inc y
 VCMDSkip1:
-	inc y ;skip parameter 1 from $FA
+	inc y
 	jmp VoiceCommandParam
 
 
@@ -610,6 +632,7 @@ RoutineCloseLoop:
 	mov DPatSubtime+1,#$00
 	ret
 
+
 RoutineMeasurePat:
 	mov a,DPNoteLength ;measure length of current pattern
 	clrc
@@ -638,6 +661,7 @@ RoutineMeasurePat:
 +	mov DPatLength+x,a
 ++	ret
 
+
 RoutineUpdateWord:
 	mov a,y
 	clrc
@@ -661,7 +685,8 @@ RoutineWriter: ;write accumulator to output
 +	mov WriteOut,a
 	pop y
 	ret
-	
+
+
 RoutineWriteHex: ;write accumulator as a hex value
 	push y
 	push a
@@ -684,6 +709,7 @@ RoutineWriteItself:
 	call RoutineWriter
 	pop y
 	ret
+
 
 RoutineGetNote:
 	mov DPNoteOctave,#$01
@@ -711,6 +737,7 @@ RoutineGetNote:
 	beq ++
 	call RoutineWriter ;account for sharps and flats
 ++	ret
+
 
 RoutineHexDecimal:
 	;convert hex to decimal length (up to =127 supported)
@@ -757,3 +784,12 @@ RoutineHexDecimal:
 	mov a,PresetHex+x
 	call RoutineWriter ;write ones (mandatory)
 	ret
+
+
+PresetFIRs:
+	db $7f,$00,$00,$00,$00,$00,$00,$00
+	db $58,$bf,$db,$f0,$fe,$07,$0c,$0c
+	db $0c,$21,$2b,$2b,$13,$fe,$f3,$f9
+	db $34,$33,$00,$d9,$e5,$01,$fc,$eb
+	db $5f,$f3,$f4,$f5,$f6,$f6,$f8,$f9
+
