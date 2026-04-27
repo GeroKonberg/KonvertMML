@@ -1,0 +1,1 @@
+asar --no-title-check "mid2kmml.asm" "output.spc"
