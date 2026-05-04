@@ -12,9 +12,9 @@ incbin "input.spc":$010000..$010200 ;insert original SPC here
 org $01016C
 db $E0 ;disable audio/echo writes at all cost
 
-
 org $000025
 dw KonvertInit
+
 
 org $000100
 base $000000 ;zero page
@@ -132,6 +132,15 @@ KonvertSet:
 
 
 KonvertReadPattern:
+	;denote pattern spacing
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	;read 2 byte pattern pointer
 	mov a,DPatPhrase
 	asl a
@@ -261,21 +270,17 @@ ForceInterrupt:
 	cmp DPSubFlag,#$00
 	beq +
 	call RoutineCloseLoop
-+	mov a,#$20
-	call RoutineWriter
-	mov a,#$20
-	call RoutineWriter
-	mov a,#$20
-	call RoutineWriter
-	mov a,#$20
-	call RoutineWriter
-	movw ya,ReadPat
++	movw ya,ReadPat
 	movw ReadSeq,ya
 	jmp KonvertReadPattern
 
 ++	call RoutineCloseLoop
 	movw ya,BackSeq
 	movw ReadSeq,ya
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	jmp ReadSequence
 
 
@@ -689,6 +694,12 @@ RoutineMeasurePat:
 	bcc +
 	inc DPatRuntime+1
 +	mov DPatRuntime,a
+	mov a,DPNoteLength ;measure length of output
+	clrc
+	adc a,DPatOuttime
+	bcc +
+	inc DPatOuttime+1
++	mov DPatOuttime,a
 --	movw ya,DPatOuttime
 	cmpw ya,DPatOutpost ;check if output timer passes one measure, add blanks to differenciate
 	bmi ++
@@ -699,13 +710,7 @@ RoutineMeasurePat:
 	mov a,#$20
 	call RoutineWriter
 	bra --
-++	mov a,DPNoteLength ;measure length of output
-	clrc
-	adc a,DPatOuttime
-	bcc +
-	inc DPatOuttime+1
-+	mov DPatOuttime,a
-	cmp DPSubFlag,#$00 ;measure length of current subroutine
+++	cmp DPSubFlag,#$00 ;measure length of current subroutine
 	beq ++
 	mov a,DPNoteLength
 	clrc
@@ -801,7 +806,8 @@ RoutineGetNote:
 	mov a,PresetNotes+1+x
 	beq ++
 	call RoutineWriter ;account for sharps and flats
-++	ret
+++	mov DPOctLatest,DPNoteOctave
+	ret
 
 
 RoutineHexDecimal:
