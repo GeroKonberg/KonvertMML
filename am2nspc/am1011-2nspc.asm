@@ -5,6 +5,7 @@ dpbase $0000
 optimize dp always
 
 
+;SNES-side program
 org $000000
 base $008000 ;SFC_MAIN
 
@@ -240,15 +241,14 @@ KonsoleInit:
 	sta $42
 	lda $8d03
 	sta $43
+	
+	
 KonsoleLoop:
 ; ensure auto-read has finished
-
 -	nop
 	lda #$01
 	sta $42
 	bra -
-
-
 
 
 org $000800
@@ -281,12 +281,10 @@ base $008D00 ;SFC_CPUIO
 
 org $001000
 base $009000 ;SFC_INIT_TEXT
-
 KonsoleScreen:
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-
-
+	;
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
@@ -295,8 +293,7 @@ KonsoleScreen:
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-
-
+	;
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
@@ -305,8 +302,7 @@ KonsoleScreen:
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-
-
+	;
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
@@ -315,15 +311,13 @@ KonsoleScreen:
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-
-
+	;
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 	db $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 
 
 org $002000
 base $00A000 ;SFC_TILES
-
 	db $3c,$66,$6e,$7e,$76,$66,$3c,$00,$18,$38,$18,$18,$18,$18,$3c,$00
 	db $7c,$06,$06,$3c,$60,$60,$7e,$00,$7c,$06,$06,$1c,$06,$06,$7c,$00
 	db $66,$66,$66,$3e,$06,$06,$06,$00,$7e,$60,$60,$7c,$06,$06,$7c,$00
@@ -332,7 +326,7 @@ base $00A000 ;SFC_TILES
 	db $18,$3c,$66,$66,$7e,$66,$66,$00,$7c,$66,$66,$7c,$66,$66,$7c,$00
 	db $3e,$60,$60,$60,$60,$60,$3e,$00,$7c,$66,$66,$66,$66,$66,$7c,$00
 	db $7e,$60,$60,$7c,$60,$60,$7e,$00,$7e,$60,$60,$78,$60,$60,$60,$00
-
+	;
 	db $c0,$f0,$fc,$ff,$fc,$f0,$c0,$00,$03,$0f,$3f,$ff,$3f,$0f,$03,$00
 	db $18,$3c,$7e,$18,$18,$7e,$3c,$18,$e7,$e7,$e7,$e7,$e7,$e7,$e7,$00
 	db $7f,$db,$db,$7b,$1b,$1b,$1b,$00,$3e,$63,$38,$6c,$6c,$38,$cc,$78
@@ -342,8 +336,7 @@ base $00A000 ;SFC_TILES
 	db $00,$00,$c0,$c0,$c0,$fe,$00,$00,$00,$24,$66,$ff,$66,$24,$00,$00
 	db $00,$18,$3c,$7e,$ff,$00,$ff,$00,$7c,$82,$ba,$a2,$ba,$82,$7c,$00
 
-
-
+	;;
 	db $00,$00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$00,$18,$00
 	db $6c,$6c,$6c,$00,$00,$00,$00,$00,$6c,$6c,$fe,$6c,$fe,$6c,$6c,$00
 	db $18,$3e,$60,$3c,$06,$7c,$18,$00,$00,$63,$66,$0c,$18,$33,$63,$00
@@ -352,7 +345,7 @@ base $00A000 ;SFC_TILES
 	db $00,$66,$3c,$ff,$3c,$66,$00,$00,$00,$30,$30,$fc,$30,$30,$00,$00
 	db $00,$00,$00,$00,$00,$18,$18,$30,$00,$00,$00,$7e,$00,$00,$00,$00
 	db $00,$00,$00,$00,$00,$18,$18,$00,$02,$06,$0c,$18,$30,$60,$40,$00
-	
+	;
 	db $3c,$66,$6e,$7e,$76,$66,$3c,$00,$18,$38,$18,$18,$18,$18,$3c,$00
 	db $7c,$06,$06,$3c,$60,$60,$7e,$00,$7c,$06,$06,$1c,$06,$06,$7c,$00
 	db $66,$66,$66,$3e,$06,$06,$06,$00,$7e,$60,$60,$7c,$06,$06,$7c,$00
@@ -362,8 +355,7 @@ base $00A000 ;SFC_TILES
 	db $0c,$18,$30,$60,$30,$18,$0c,$00,$00,$00,$7e,$00,$00,$7e,$00,$00
 	db $30,$18,$0c,$06,$0c,$18,$30,$00,$3c,$66,$06,$0c,$18,$00,$18,$00
 
-
-
+	;;
 	db $3e,$63,$6f,$69,$6f,$60,$3e,$00,$18,$3c,$66,$66,$7e,$66,$66,$00
 	db $7c,$66,$66,$7c,$66,$66,$7c,$00,$3e,$60,$60,$60,$60,$60,$3e,$00
 	db $7c,$66,$66,$66,$66,$66,$7c,$00,$7e,$60,$60,$7c,$60,$60,$7e,$00
@@ -372,7 +364,7 @@ base $00A000 ;SFC_TILES
 	db $06,$06,$06,$06,$66,$66,$3c,$00,$66,$66,$6c,$78,$6c,$66,$66,$00
 	db $60,$60,$60,$60,$60,$60,$7e,$00,$63,$77,$7f,$7f,$6b,$63,$63,$00
 	db $66,$66,$76,$7e,$6e,$66,$66,$00,$3c,$66,$66,$66,$66,$66,$3c,$00
-
+	;
 	db $7c,$66,$66,$7c,$60,$60,$60,$00,$3c,$66,$66,$66,$66,$6e,$3c,$06
 	db $7c,$66,$66,$7c,$6c,$66,$66,$00,$3c,$66,$60,$3c,$06,$66,$3c,$00
 	db $7e,$18,$18,$18,$18,$18,$18,$00,$66,$66,$66,$66,$66,$66,$3c,$00
@@ -382,8 +374,7 @@ base $00A000 ;SFC_TILES
 	db $40,$60,$30,$18,$0c,$06,$02,$00,$3c,$0c,$0c,$0c,$0c,$0c,$3c,$00
 	db $08,$1c,$36,$63,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$ff
 
-
-
+	;;
 	db $30,$18,$0c,$00,$00,$00,$00,$00,$00,$00,$3e,$66,$66,$66,$3e,$00
 	db $60,$60,$7c,$66,$66,$66,$7c,$00,$00,$00,$3e,$60,$60,$60,$3e,$00
 	db $06,$06,$3e,$66,$66,$66,$3e,$00,$00,$00,$3c,$66,$7e,$60,$3e,$00
@@ -392,7 +383,7 @@ base $00A000 ;SFC_TILES
 	db $06,$00,$06,$06,$06,$66,$66,$3c,$60,$60,$66,$6c,$78,$6c,$66,$00
 	db $18,$18,$18,$18,$18,$18,$18,$00,$00,$00,$66,$7f,$7f,$6b,$63,$00
 	db $00,$00,$7c,$66,$66,$66,$66,$00,$00,$00,$3c,$66,$66,$66,$3c,$00
-
+	;
 	db $00,$00,$7c,$66,$66,$7c,$60,$60,$00,$00,$3e,$66,$66,$3e,$06,$06
 	db $00,$00,$6c,$76,$60,$60,$60,$00,$00,$00,$3e,$60,$3c,$06,$7c,$00
 	db $18,$18,$7e,$18,$18,$18,$18,$00,$00,$00,$66,$66,$66,$66,$3e,$00
@@ -404,19 +395,20 @@ base $00A000 ;SFC_TILES
 
 
 org $002000
-base $00A000 ;SFC_
-
+base $00A000 ;SFC_MISC
 
 
 org $007FC0
-base $00FFC0
+base $00FFC0 ;SFC_ROMNAME
 	db "SPC PLAYER"
+
 
 org $007FD5
 base $00FFD5 ;SFC_ROMMETA
 	db $00,$01,$08,$00, $01,$01,$00,$00, $00,$FF,$FF
 	db $00,$00,$00,$00, $00,$00,$00,$00, $00,$00,$00,$00, $00,$00,$00,$00
 	db $00,$00,$00,$00, $00,$00,$00,$00, $00,$00,$00,$00, $00,$80,$00,$00
+
 
 org $017F84
 base $027F84 ;SFC_IPL2
@@ -428,22 +420,26 @@ base $027F84 ;SFC_IPL2
 
 org $008000
 base $000000
+	incbin "asm/driver.spc":$0100..$8100 ;insert NSPC driver (lower half)
 
-	incbin "asm/driver.spc":$0100..$8100
 
 org $010000
 base $008000
-	incbin "asm/driver.spc":$8100..$10100
+	incbin "asm/driver.spc":$8100..$10100 ;insert NSPC driver (upper half)
+
 
 org $00AA54
-	incbin "input.spc":$002B54..$003CFF ;insert addmusic SPC here
+	incbin "input.spc":$002B54..$003CFF ;insert addmusic 1.0.11 SPC here
 
+
+;SPC-side code program
 arch spc700-raw
 dpbase $0000
 optimize dp always
 
+
 org $0080d6
-base $0000d6 ;zero page
+base $0000d6 ;zero page (skip over existing driver memory)
 
 ReadSeq:
 skip 2
@@ -468,8 +464,9 @@ skip 1
 DPStack:
 skip 1
 
+
 org $00a500
-base $002500 ;drive page
+base $002500 ;modified sequence converter program
 
 KonvertInit:
 	mov DPSubMeta,#$00
@@ -497,6 +494,7 @@ KonvertInit:
 	mov y,a
 	pop a
 	movw ReadPat,ya
+
 
 KonvertReadPattern: ;8x2-byte word pattern
 	cmp ReadTrackX,#$08
@@ -527,6 +525,7 @@ KonvertReadPattern: ;8x2-byte word pattern
 	pop a
 	movw ReadSeq,ya
 	jmp ReadSequence
+
 
 ReadSequence:
 ---	cmp WriteOut+1,#$ff
@@ -559,8 +558,10 @@ ReadSequence:
 	mov a,PresetDrumKit+x
 	bra --
 
-PresetDrumKit:
+
+PresetDrumKit: ;vanilla percussion (@21-29)
 	db $DC,$D3,$D2, $DB,$DB,$D8,$D8, $D8,$DB,$CB,$CC, $CD,$CE,$CF,$D0
+
 
 ReadInterrupt:
 	cmp DPSubFlag,#$00
@@ -570,8 +571,6 @@ ForceInterrupt:
 	call RoutineWriter
 	inc ReadTrackX
 	jmp KonvertReadPattern
-
-
 -	nop
 	bra -
 +	cmp DPSubFlag,#$01
@@ -586,6 +585,7 @@ ForceInterrupt:
 	movw ReadSeq,ya
 	jmp ReadSequence
 
+
 ReadVoiceCommands:
 -	setc
 	sbc a,#$5a
@@ -596,6 +596,7 @@ ReadVoiceCommands:
 	mov a,PresetVCMD+x
 	push a
 	ret
+
 
 PresetVCMD:
 	dw VcmdDA
@@ -637,7 +638,8 @@ PresetVCMD:
 	dw VcmdFE
 	dw VcmdFF
 
-VcmdDA: ;instrument
+
+VcmdDA: ;e0 instrument
 	mov a,#$e0
 	call RoutineWriter
 	inc y ;arg 1
@@ -663,12 +665,14 @@ VcmdDA: ;instrument
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-PresetInstTable:
+
+PresetInstTable: ;vanilla instrument table (@00-@18)
 	db $00,$01,$03,$04, $05,$0A,$0B,$0C, $07,$0D,$0E,$02, $13,$0F,$10,$15
 	db $0F,$14,$02,$16, $17
 	db $12,$09,$08, $11,$11,$0E,$0E, $0E,$11
 
-PresetSRCTable:
+
+PresetSRCTable: ;direct SRC as used by custom instruments
 	db $00,$01,$03,$04, $05,$07,$08,$0A, $0B,$0C,$0D,$0E, $0F,$10,$11,$12
 	db $13,$14,$15,$16
 	db $19,$17
@@ -677,7 +681,8 @@ PresetSRCTable:
 	db $00,$01,$02,$03, $04,$05,$06,$07, $08,$09,$0A,$0B, $0C,$0D,$0E,$0F
 	db $00,$01,$02,$03, $04,$05,$06,$07, $08,$09,$0A,$0B, $0C,$0D,$0E,$0F
 
-VcmdDB:
+
+VcmdDB: ;e1 pan
 	mov a,#$e1
 	call RoutineWriter
 	inc y ;arg 1
@@ -687,7 +692,8 @@ VcmdDB:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdDC:
+
+VcmdDC: ;e2 pan fade
 	mov a,#$e2
 	call RoutineWriter
 	inc y ;arg 1
@@ -700,7 +706,8 @@ VcmdDC:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdDD:
+
+VcmdDD: ;f9 pitch slide
 	mov a,#$f9
 	call RoutineWriter
 	inc y ;arg 1
@@ -716,7 +723,8 @@ VcmdDD:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdDE:
+
+VcmdDE: ;e3 vibrato on
 	mov a,#$e3
 	call RoutineWriter
 	inc y ;arg 1
@@ -732,14 +740,16 @@ VcmdDE:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdDF:
+
+VcmdDF: ;e4 vibrato off
 	mov a,#$e4
 	call RoutineWriter
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdE0:
+
+VcmdE0: ;e5 song volume
 	mov a,#$e5
 	call RoutineWriter
 	inc y ;arg 1
@@ -749,7 +759,8 @@ VcmdE0:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdE1:
+
+VcmdE1: ;e6 song volume fade
 	mov a,#$e6
 	call RoutineWriter
 	inc y ;arg 1
@@ -762,19 +773,20 @@ VcmdE1:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdE2:
+
+VcmdE2: ;e7 tempo
 	mov a,#$e7
 	call RoutineWriter
 	inc y ;arg 1
 	mov a,(ReadSeq)+y
-	inc a
+	inc a ;re-align from carry flag
 	call RoutineWriter
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
 
-VcmdE3:
+VcmdE3: ;e8 tempo fade
 	mov a,#$e8
 	call RoutineWriter
 	inc y ;arg 1
@@ -788,7 +800,8 @@ VcmdE3:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdE4:
+
+VcmdE4: ;e9 global absolute transposition
 	mov a,#$e9
 	call RoutineWriter
 	inc y ;arg 1
@@ -798,7 +811,8 @@ VcmdE4:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdE5:
+
+VcmdE5: ;eb tremolo on
 	mov a,#$eb
 	call RoutineWriter
 	inc y ;arg 1
@@ -814,7 +828,8 @@ VcmdE5:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdE6:
+
+VcmdE6: ;unroll bracket loops
 	inc y ;arg 1
 	mov a,(ReadSeq)+y
 	bne ++
@@ -837,7 +852,8 @@ VcmdE6:
 	movw ReadSeq,ya
 	jmp ReadSequence
 
-VcmdE7:
+
+VcmdE7: ;ed volume
 	mov a,#$ed
 	call RoutineWriter
 	inc y ;arg 1
@@ -847,7 +863,8 @@ VcmdE7:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdE8:
+
+VcmdE8: ;ee volume fade
 	mov a,#$ee
 	call RoutineWriter
 	inc y ;arg 1
@@ -861,7 +878,7 @@ VcmdE8:
 	jmp ReadSequence
 
 
-VcmdE9: ;subroutines
+VcmdE9: ;unroll subroutines
 	mov a,#$ef
 	inc y ;arg 1
 	mov a,(ReadSeq)+y
@@ -886,7 +903,8 @@ VcmdE9: ;subroutines
 	movw SubPos,ya
 	jmp ReadSequence
 
-VcmdEA:
+
+VcmdEA: ;f0 vibrato fade
 	mov a,#$f0
 	call RoutineWriter
 	inc y ;arg 1
@@ -896,7 +914,8 @@ VcmdEA:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdEB:
+
+VcmdEB: ;f1 note pitch envelope to
 	mov a,#$f1
 	call RoutineWriter
 	inc y ;arg 1
@@ -912,7 +931,8 @@ VcmdEB:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdEC:
+
+VcmdEC: ;f2 note pitch envelope from
 	mov a,#$f2
 	call RoutineWriter
 	inc y ;arg 1
@@ -928,14 +948,16 @@ VcmdEC:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdED:
+
+VcmdED: ;skip ADSR changes (use custom instruments instead)
 	inc y
 	inc y
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdEE:
+
+VcmdEE: ;f4 fine tune
 	mov a,#$f4
 	call RoutineWriter
 	inc y ;arg 1
@@ -945,7 +967,8 @@ VcmdEE:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdEF:
+
+VcmdEF: ;f5 echo bits & volume
 	mov a,#$f5
 	call RoutineWriter
 	inc y ;arg 1
@@ -978,14 +1001,16 @@ VcmdEF:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdF0:
+
+VcmdF0: ;f6 echo disable
 	mov a,#$f6
 	call RoutineWriter
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdF1:
+
+VcmdF1: ;f7 echo parameters
 	mov a,#$f7
 	call RoutineWriter
 	inc y ;arg 1
@@ -1001,7 +1026,8 @@ VcmdF1:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdF2:
+
+VcmdF2: ;f8 echo volume fade
 	mov a,#$f8
 	call RoutineWriter
 	inc y ;arg 1
@@ -1009,21 +1035,23 @@ VcmdF2:
 	call RoutineWriter
 	bra ---
 
-VcmdF3:
+
+VcmdF3: ;skip old-style sample load
 	inc y
 	inc y
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdF4:
+
+VcmdF4: ;skip channel toggles
 	inc y
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
 
-VcmdF5:
+VcmdF5: ;skip fir filter
 	inc y
 	inc y
 	inc y
@@ -1036,32 +1064,37 @@ VcmdF5:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdF6:
+
+VcmdF6: ;skip DSP writes
 	inc y
 	inc y
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdF7:
+
+VcmdF7: ;skip unknown
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdF8:
-	inc y
-	inc y
-	call RoutineUpdateWord
-	jmp ReadSequence
 
-VcmdF9:
-	inc y
+VcmdF8: ;skip noise
 	inc y
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdFA:
+
+VcmdF9: ;skip data send
+	inc y
+	inc y
+	inc y
+	call RoutineUpdateWord
+	jmp ReadSequence
+
+
+VcmdFA: ;ea channel transposition
 	inc y
 	mov a,(ReadSeq)+y
 	inc y
@@ -1075,7 +1108,8 @@ VcmdFA:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdFB:
+
+VcmdFB: ;skip special effects
 	inc y
 	inc y
 	inc y
@@ -1083,7 +1117,8 @@ VcmdFB:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdFC:
+
+VcmdFC: ;skip remote commands
 	inc y
 	inc y
 	inc y
@@ -1092,24 +1127,25 @@ VcmdFC:
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdFD:
+
+VcmdFD: ;ec tremolo off
 	mov a,#$ec
 	call RoutineWriter
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdFE:
+
+VcmdFE: ;pitch bend off
 	mov a,#$f3
 	call RoutineWriter
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
-VcmdFF:
+
+VcmdFF: ;invalid
 	jmp ForceInterrupt
-
-
 
 
 RoutineUpdateWord:
@@ -1135,4 +1171,4 @@ RoutineWriter: ;write accumulator to output
 +	mov WriteOut,a
 	pop y
 	ret
-	
+
