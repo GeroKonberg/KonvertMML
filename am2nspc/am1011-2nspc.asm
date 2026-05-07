@@ -441,28 +441,32 @@ optimize dp always
 org $0080d6
 base $0000d6 ;zero page (skip over existing driver memory)
 
-ReadSeq:
+ReadSeq: ;d6-d7
 skip 2
-BackSeq: ;backup for subroutine calls
+BackSeq: ;d8-d9 backup for subroutine calls
 skip 2
-CopySeq:
+CopySeq: ;da-db
 skip 2
-DPSubFlag:
+DPSubFlag: ;dc
 skip 1
-ReadPat:
+ReadPat: ;dd-de
 skip 2
-ReadTrackX: ;0-7,1-8
+ReadTrackX: ;df 0-7,1-8
 skip 1
-WriteOut:
+WriteOut: ;e0-e1
 skip 2
-PadOut:
+PadOut1: ;e2-e3
 skip 2
-SubPos:
+PadOut2: ;e4-e5
 skip 2
-DPSubMeta:
+SubPos: ;e6-e7
+skip 2
+DPSubMeta: ;e8
 skip 1
-DPStack:
+DPStack: ;e9
 skip 1
+DPatLoop: ;ea-eb compare for loop point
+skip 2
 
 
 org $00a500
@@ -475,15 +479,15 @@ KonvertInit:
 	mov y,#$c0
 	mov a,#$30
 	movw WriteOut,ya
-
 	mov y,#$c0
 	mov a,#$10
-	movw PadOut,ya
-
+	movw PadOut1,ya
+	mov y,#$c0
+	mov a,#$20
+	movw PadOut2,ya
 	mov y,#$2a
 	mov a,#$54
 	movw ReadPat,ya
-
 	mov y,#$00
 	mov a,(ReadPat)+y
 	push a
@@ -502,9 +506,21 @@ KonvertReadPattern: ;8x2-byte word pattern
 --	mov a,#$00
 	mov x,a
 	mov y,a
-	jmp $0500
+	jmp $0500 ;jump to N-SPC once completed
 +	mov a,ReadTrackX
 	asl a
+	push a
+	clrc
+	adc a,#$10
+	mov y,a
+	mov a,(ReadPat)+y
+	push a
+	inc y
+	mov a,(ReadPat)+y
+	mov y,a
+	pop a
+	movw DPatLoop,ya ;store forever looping pattern
+	pop a
 	mov y,a
 	inc y
 	mov a,(ReadPat)+y
@@ -512,12 +528,14 @@ KonvertReadPattern: ;8x2-byte word pattern
 	jmp ForceInterrupt
 +	dec y
 	mov a,WriteOut
-	mov (PadOut)+y,a
+	mov (PadOut1)+y,a
+	mov (PadOut2)+y,a
 	mov a,(ReadPat)+y
 	push a
 	inc y
 	mov a,WriteOut+1
-	mov (PadOut)+y,a
+	mov (PadOut1)+y,a
+	mov (PadOut2)+y,a
 	mov a,(ReadPat)+y
 ;	clrc
 ;	adc a,#$70
@@ -528,7 +546,19 @@ KonvertReadPattern: ;8x2-byte word pattern
 
 
 ReadSequence:
----	cmp WriteOut+1,#$ff
+---
+	movw ya,ReadSeq
+	cmpw ya,DPatLoop ;detect loop points from input patterns
+	bne ++
+	mov a,ReadTrackX
+	asl a
+	mov y,a
+	mov a,WriteOut
+	mov (PadOut2)+y,a
+	inc y
+	mov a,WriteOut+1
+	mov (PadOut2)+y,a
+++	cmp WriteOut+1,#$ff
 	beq --
 	mov y,#$00
 	mov a,(ReadSeq)+y
