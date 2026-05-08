@@ -467,6 +467,8 @@ DPStack: ;e9
 skip 1
 DPatLoop: ;ea-eb compare for loop point
 skip 2
+DPBypass: ;ec bypass pattern duplication for non-looping jingles
+skip 1
 
 
 org $00a500
@@ -476,6 +478,7 @@ KonvertInit:
 	mov DPSubMeta,#$00
 	mov DPSubFlag,#$00
 	mov ReadTrackX,#$00
+	mov DPBypass,#$00
 	mov y,#$c0
 	mov a,#$30
 	movw WriteOut,ya
@@ -493,9 +496,15 @@ KonvertInit:
 	push a
 	inc y
 	mov a,(ReadPat)+y
+	push a
+	inc y
+	inc y
+	mov a,(ReadPat)+y ;check if the song should repeat or not
+	bne +
+	inc DPBypass
 ;	clrc
 ;	adc a,#$70
-	mov y,a
++	pop y
 	pop a
 	movw ReadPat,ya
 
@@ -529,14 +538,18 @@ KonvertReadPattern: ;8x2-byte word pattern
 +	dec y
 	mov a,WriteOut
 	mov (PadOut1)+y,a
+	cmp DPBypass,#$00
+	bne +
 	mov (PadOut2)+y,a
-	mov a,(ReadPat)+y
++	mov a,(ReadPat)+y
 	push a
 	inc y
 	mov a,WriteOut+1
 	mov (PadOut1)+y,a
+	cmp DPBypass,#$00
+	bne +
 	mov (PadOut2)+y,a
-	mov a,(ReadPat)+y
++	mov a,(ReadPat)+y
 ;	clrc
 ;	adc a,#$70
 	mov y,a
