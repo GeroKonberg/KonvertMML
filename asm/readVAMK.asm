@@ -76,7 +76,9 @@ skip 2
 DPatOutpost: ;24-25 when to split output
 skip 2
 DPatLength: ;26-xx measure total pattern lengths for channel 0
-skip 128
+skip 6
+DPatLoop:
+skip 2
 
 
 org !OutAddr+256
@@ -185,9 +187,21 @@ KonvertReadPattern:
 	mov y,a
 	pop a
 	movw ReadSeq,ya
-	;read 2x8 pattern index from channel 0-7
+	;read 2x8 pattern loop & intro from channel 0-7
 	mov a,ReadTrackX
 	asl a
+	push a
+	clrc
+	adc a,#$10
+	mov y,a
+	mov a,(ReadSeq)+y
+	push a
+	inc y
+	mov a,(ReadSeq)+y
+	mov y,a
+	pop a
+	movw DPatLoop,ya ;store forever looping pattern
+	pop a
 	mov y,a
 	mov a,(ReadSeq)+y
 	push a
@@ -229,7 +243,21 @@ KonvertReadPattern:
 	jmp ReadSequence
 
 ReadSequence:
-	mov a,DPatMirror+1
+	cmp DPatPhrase,#$00 ;skip duplicate patterns
+	beq +
+	jmp ForceInterrupt
++	movw ya,ReadSeq ;detect loop points via pattern comparisons
+	cmpw ya,DPatLoop
+	bne ++
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
+	mov DPatOuttime,#$00
+	mov DPatOuttime+1,#$00
+	mov a,#$2f  ;forward slash
+	call RoutineWriter
+++	mov a,DPatMirror+1
 	bne +
 	mov a,DPatMirror
 	beq ++
@@ -527,7 +555,6 @@ VCMDEchoSetup:
 	call RoutineWriteHex
 	inc y
 	mov a,(ReadSeq)+y ;FIR filter
-	inc a
 	call RoutineWriteHex
 	bra FinishCom
 
