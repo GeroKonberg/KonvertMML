@@ -25,7 +25,9 @@ ReadPat:
 skip 2
 ReadOffset:
 skip 2
-BackSeq: ;backup for subroutine calls
+BackSeqA: ;backup for subroutine calls
+skip 2
+BackSeqB:
 skip 2
 DPSubFlag:
 skip 1
@@ -122,7 +124,8 @@ KonvertInit:
 	adc a,#$11
 	bcc +
 	inc ReadSeq+1
-+	bra --
++	mov ReadSeq,a
+	bra --
 ++	inc y
 	mov a,y
 	clrc
@@ -248,28 +251,59 @@ PresetBetopIndex:
 VCMDBetopJump: ;64 mark end of track
 	jmp ForceInterrupt
 
+
 VCMDBetopCall: ;65
 	inc y
-	mov a,(ReadSeq)+y ;dir lsb
+	mov a,(ReadSeq)+y
 	push a
 	inc y
-	mov a,(ReadSeq)+y ;dir msb
+	mov a,(ReadSeq)+y
 	push a
+	mov a,#$20 ;seperate called data
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
+;	mov a,#$5b ;start bracket
+;	call RoutineWriter
 	inc y
 	call RoutineUpdateWord
 	movw ya,ReadSeq
-	movw BackSeq,ya ;store a backup for return
+	cmp DPSubFlag,#$00
+	beq ++
+	movw BackSeqB,ya
+;	mov a,#$5b ;start double bracket
+;	call RoutineWriter
+	bra +
+++	movw BackSeqA,ya ;store a backup for return
++	inc DPSubFlag ;store repeat calls for later
 	pop a
 	mov y,a
 	pop a
 	addw ya,ReadOffset
 	movw ReadSeq,ya ;read from subroutine
 	jmp ReadSequence
-	
+
+
 VCMDBetopReturn: ;66
-	movw ya,BackSeq
-	movw ReadSeq,ya
+;	mov a,#$20
+;	call RoutineWriter
+;	mov a,#$5d ;end bracket
+;	call RoutineWriter
+	dec DPSubFlag
+	cmp DPSubFlag,#$00
+	beq ++
+;	mov a,#$5d ;end double bracket
+;	call RoutineWriter
+	movw ya,BackSeqB
+	bra +
+++	movw ya,BackSeqA
++	movw ReadSeq,ya
+	mov a,#$20 ;seperate end of call
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	jmp ReadSequence
+
 
 VCMDRepStart: ;67, store value
 	inc y
@@ -279,7 +313,9 @@ VCMDRepStart: ;67, store value
 	mov DPRepValA,a ;value 1 (solo bracket)
 	bra ++
 +	mov DPRepValB,a ;value 2 (double bracket)
-	mov a,#$20 ;start bracket
+	mov a,#$20 ;seperate repeat brackets
+	call RoutineWriter
+	mov a,#$20
 	call RoutineWriter
 	mov a,#$5b ;start bracket
 	call RoutineWriter
@@ -290,7 +326,7 @@ VCMDRepStart: ;67, store value
 	jmp ReadSequence
 
 
-VCMDRepEnd:
+VCMDRepEnd: ;68
 	cmp DPRepValB,#$00
 	bne ++
 	mov a,#$5d ;end single bracket
@@ -306,14 +342,18 @@ VCMDRepEnd:
 	mov a,DPRepValB
 	call RoutineHexDecimal
 	mov DPRepValB,#$00
-+++	inc y
++++	mov a,#$20 ;seperate end of repeat brackets
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
+	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
 
 
 VoiceInterrupt: ;00
-	cmp DPSubFlag,#$00 ;check for subroutines
-	bne ++
+;	cmp DPSubFlag,#$00 ;check for subroutines
+;	bne ++
 ForceInterrupt:
 	inc ReadTrackX
 	cmp ReadTrackX,#$08
@@ -342,10 +382,10 @@ ForceInterrupt:
 	movw ReadSeq,ya
 	jmp KonvertReadPattern
 
-++	call RoutineCloseLoop
-	movw ya,BackSeq
-	movw ReadSeq,ya
-	jmp ReadSequence
+;++	call RoutineCloseLoop
+;	movw ya,BackSeqA
+;	movw ReadSeq,ya
+;	jmp ReadSequence
 
 
 VoiceNoteEvent: ;01-DF
@@ -504,22 +544,22 @@ PresetNotes: ;note definition per octave
 PresetVCMD: ;N-SPC to SMW VCMD conversion table [$E0-$FF]
 			;if zero, the writer will skip it immediatly
 	db $DA ;instrument
-	db $DB ;pan
+	db $00 ;pan
 	db $DC ;pan fade
 	db $DE ;vibrato on
 
 	db $DF ;vibrato off
-	db $E0 ;song volume
+	db $00 ;song volume
 	db $E1 ;song volume fade
-	db $E2 ;tempo
+	db $00 ;tempo
 
 	db $E3 ;tempo fade
 	db $E4 ;global transposition
-	db $00 ;($FA $02) channel transposition 
+	db $00 ;channel transposition 
 	db $E5 ;tremolo on
 
 	db $DF ;tremolo off
-	db $E7 ;volume
+	db $00 ;volume
 	db $E8 ;volume fade
 	db $00 ;subroutine (handle externally)
 
@@ -538,7 +578,7 @@ PresetVCMD: ;N-SPC to SMW VCMD conversion table [$E0-$FF]
 	db $F2 ;echo vol fade
 	db $DD ;pitch slide
 	db $00 ;percussion base (skip)
-	db $00 ;
+	db $00 ;quantization
 
 	db $00 ;
 	db $00 ;
@@ -547,14 +587,14 @@ PresetVCMD: ;N-SPC to SMW VCMD conversion table [$E0-$FF]
 	
 PresetVCMDIndex:
 	dw $0100 ;e0
-	dw $0100 ;e1
+	dw VCMDPan ;e1
 	dw $0200 ;e2
 	dw $0300 ;e3
 
 	dw $0000 ;e4
-	dw $0100 ;e5
+	dw VCMDSongVol ;e5
 	dw $0200 ;e6
-	dw $0100 ;e7
+	dw VCMDTempo ;e7
 
 	dw $0200 ;e8
 	dw $0100 ;e9
@@ -562,7 +602,7 @@ PresetVCMDIndex:
 	dw $0300 ;eb
 
 	dw $0000 ;ec
-	dw $0100 ;ed
+	dw VCMDVolume ;ed
 	dw $0200 ;ee
 	dw VCMDSubroutine ;ef
 
@@ -579,24 +619,68 @@ PresetVCMDIndex:
 	dw $0300 ;f8
 	dw VCMDBend ;f9
 	dw VCMDSkip1 ;fa percussion base (skip)
-	dw VCMDSkip1 ;fb
+	dw VCMDQuant ;fb
 
 	dw VoiceCommandParam ;fc
 	dw VCMDSkip1 ;fd
 	dw VoiceCommandParam ;fe
 	dw VoiceCommandParam ;ff
 
-VCMDPorta:
-	mov a,#$26 ;and sign
-	call RoutineWriter
-	mov DPNoteOctave,#$01
-	inc y
-	mov a,(ReadSeq)+y
-	and a,#$7f
-	call RoutineGetNote
+
+FinishCom:
 	inc y
 	call RoutineUpdateWord
 	jmp ReadSequence
+
+
+VCMDQuant: ;relocated from qXY which became a tie
+	mov a,#$71 ;q
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	and a,#$7f
+	call RoutineWriteItself
+	jmp FinishCom
+
+
+VCMDVolume:
+	mov a,#$76  ;v
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	call RoutineHexDecimal
+	jmp FinishCom
+
+
+VCMDSongVol:
+	mov a,#$77  ;w
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	call RoutineHexDecimal
+	jmp FinishCom
+
+
+VCMDPan:
+	mov a,#$79  ;y
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	and a,#$3f ;todo: account for surround flags
+	call RoutineHexDecimal
+	jmp FinishCom
+
+
+VCMDTempo:
+	mov a,#$74 ;t
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	lsr a
+	dec a ;adapt tempo for carry
+	call RoutineHexDecimal
+	jmp FinishCom
+
 
 VCMDBend:
 	inc y
@@ -610,9 +694,8 @@ VCMDBend:
 	clrc
 	adc a,DPNoteTrans ;adapt note for transposition
 	call RoutineWriteHex
-	inc y
-	call RoutineUpdateWord
-	jmp ReadSequence
+	jmp FinishCom
+
 
 VCMDTranspose: ;fa 02 -> hx (V120)
 	mov a,#$68 ;h
@@ -628,12 +711,14 @@ VCMDTranspose: ;fa 02 -> hx (V120)
 	setc
 	sbc a,DPStack2
 +	call RoutineHexDecimal
-	inc y
-	call RoutineUpdateWord
-	jmp ReadSequence
+	jmp FinishCom
 
 
 VCMDSubroutine:
+	mov a,#$20 ;seperate subroutines
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	inc y
 	mov a,(ReadSeq)+y
 	push a
@@ -648,15 +733,12 @@ VCMDSubroutine:
 	inc y
 	call RoutineUpdateWord
 	movw ya,ReadSeq
-	movw BackSeq,ya ;store a backup for return
+	movw BackSeqA,ya ;store a backup for return
 	pop a
 	mov y,a
 	pop a
 	movw ReadSeq,ya ;read from subroutine
 	jmp ReadSequence
-
--	nop
-	bra -
 
 
 VCMDSkip1:
@@ -690,7 +772,12 @@ RoutineCloseLoop:
 	bra ---
 +++	mov DPatSubtime,#$00
 	mov DPatSubtime+1,#$00
+	mov a,#$20 ;seperate end of subroutine
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	ret
+
 
 RoutineMeasurePat:
 	mov a,DPNoteLength ;measure length of current pattern
@@ -719,6 +806,7 @@ RoutineMeasurePat:
 	inc DPatLength+1+x
 +	mov DPatLength+x,a
 ++	ret
+
 
 RoutineUpdateWord:
 	mov a,y
