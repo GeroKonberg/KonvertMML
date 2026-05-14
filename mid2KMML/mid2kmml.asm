@@ -65,7 +65,8 @@ DPLatestPerc: ;1D
 skip 1
 DPRemainder: ;1E
 skip 1
-
+DPBarSplit: ;1F
+skip 1
 
 org $0200
 base $0100 ;one page
@@ -79,7 +80,7 @@ base $0200 ;write page
 
 HeaderSQ:
 FormatSQ: ;write out
-skip 4000
+skip 5120
 skip align 256
 LoadMIDI: ;load song
 	incbin "input.mid"
@@ -229,17 +230,17 @@ ReadController:
 PresetControllers:
 	dw CheckDelta
 	dw CC01mod
-	dw CC02breath
 	dw CheckDelta
 	dw CheckDelta
-	dw CC05porta
+	dw CheckDelta
+	dw CheckDelta
 	dw CheckDelta
 	dw CC07vol
 	dw CheckDelta
 	dw CheckDelta
 	dw CC0Apan
 	dw CC0Bexp
-
+	
 CC01mod:
 	cmp a,DPLatestMod
 	beq ++
@@ -255,13 +256,13 @@ CC01mod:
 	call RoutineWriteHex
 ++	jmp CheckDelta
 
-CC02breath:
--	nop
-	bra -
-
-CC05porta:
--	nop
-	bra -
+;CC02breath:
+;-	nop
+;	bra -
+;
+;CC05porta:
+;-	nop
+;	bra -
 
 CC07vol:
 	asl a
@@ -348,20 +349,20 @@ ReadMetaEvent:
 	mov DPRemainder,#$00
 	mov DPatOuttime,#$00
 	mov DPatOuttime+1,#$00
-	mov a,#$20
-	call RoutineWriter
-	mov a,#$20
-	call RoutineWriter
-	mov a,#$20
-	call RoutineWriter
-	mov a,#$20
-	call RoutineWriter
+	mov DPBarSplit,#$00
+	call RoutineLineBreak
+	call RoutineLineBreak
+	call RoutineLineBreak
+	call RoutineLineBreak
 	mov a,#$23 ;start new channel
 	call RoutineWriter
 	mov a,ReadTrackX
-	clrc
-	adc a,#$30
+	or a,#$30
 	call RoutineWriter
+	mov a,#$6c ;l
+	call RoutineWriter
+	mov a,#$c0 ;192
+	call RoutineHexDecimal
 +	mov y,#$0a
 	bra CheckDelta
 +++	cmp a,#$51 ;tempo
@@ -401,8 +402,10 @@ CheckDelta:
 	inc y
 	mov a,(ReadSeq)+y ;check for note delta
 	beq +
-	jmp ReadDelta
-+	jmp FinishCom
+-	jmp ReadDelta
++	cmp DPBypass,#$00
+	bne -
+	jmp FinishCom
 
 ReadDelta: ;wait for next event in ties
 	mov a,(ReadSeq)+y
@@ -425,17 +428,28 @@ ReadDelta: ;wait for next event in ties
 
 
 RoutineCalcDelta:
-	cmp DPBypass,#$00 ;skip tie on initial note events
-	bne +
-	mov a,#$5e ;^
-	call RoutineWriter
-+	mov a,#$3d ;=
-	call RoutineWriter
+	cmp ReadTrackX,#$ff
+	beq +++
 	mov a,DPStack2
 	clrc
 	lsr a
 	bcc +
 	inc DPRemainder
++	cmp DPBypass,#$00 ;skip tie on initial note events
+	bne ++
+	cmp a,#$00
+	beq +++
+;	cmp DPBypass,#$00 ;skip tie on initial note events
+;	bne ++
+	mov a,#$5e ;^
+	call RoutineWriter
+++	mov a,#$3d ;=
+	call RoutineWriter
+	mov a,DPStack2
+	clrc
+	lsr a
+;	bcc +
+;	inc DPRemainder
 +	cmp DPRemainder,#$02 ;even out lost ticks by 2s
 	bmi +
 	inc a
@@ -443,7 +457,7 @@ RoutineCalcDelta:
 +	call RoutineHexDecimal
 	mov DPBypass,#$00
 	call RoutineMeasurePat
-	ret 
++++	ret 
 
 
 RoutineMeasurePat:
@@ -464,14 +478,17 @@ RoutineMeasurePat:
 +	mov DPatOuttime,a
 
 --	movw ya,DPatOuttime
-	cmpw ya,DPatOutpost ;check if output timer passes one measure, add blanks to differenciate
+	cmpw ya,DPatOutpost ;check if output timer passes one measure, add line break to differenciate
 	bmi ++
 	subw ya,DPatOutpost
 	movw DPatOuttime,ya
-	mov a,#$20
-	call RoutineWriter
-	mov a,#$20
-	call RoutineWriter
+	inc DPBarSplit
+	cmp DPBarSplit,#$04 ;add second line break every 4 bars
+	bne +
+	mov DPBarSplit,#$00
+	call RoutineLineBreak
++	call RoutineLineBreak
+;	mov DPOctLatest,#$00 ;redefine octave every bar
 	bra --
 
 ++	cmp ReadTrackX,#$00 ;measure initial pattern lengths on track 0 per phrase
@@ -487,6 +504,13 @@ RoutineMeasurePat:
 ++	pop y
 	ret
 
+
+RoutineLineBreak:
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
+	ret
 
 RoutineUpdateWord:
 	mov a,y
@@ -545,15 +569,26 @@ RoutineGetNote:
 	sbc a,#$0c
 	bra -
 +	mov DPNoteKey,a
-	cmp DPNoteOctave,DPOctLatest ;compare latest octave for truncation
-	beq +
-	mov a,#$6f ;o
+	cmp DPOctLatest,#$00 ;force absolute on new channels
+	beq ++
+--	cmp DPNoteOctave,DPOctLatest ;compare latest octave for truncation
+	beq +++
+	bmi +
+	mov a,#$3e ;>
+	call RoutineWriter
+	inc DPOctLatest
+	bra --
++	mov a,#$3c ;<
+	call RoutineWriter
+	dec DPOctLatest
+	bra --
+++	mov a,#$6f ;o
 	call RoutineWriter
 	mov a,DPNoteOctave
 	mov x,a
 	mov a,PresetHex+x 
 	call RoutineWriter ;write octave of the key in ASCII
-+	mov a,DPNoteKey
++++	mov a,DPNoteKey
 	asl a
 	mov x,a
 	mov a,PresetNotes+x
@@ -600,7 +635,7 @@ RoutineHexDecimal:
 +	mov a,DPSum1
 	and a,#$f0
 	xcn a
-;	beq +
+	beq +
 	mov x,a
 	mov a,PresetHex+x
 	call RoutineWriter ;write tens (if given)
