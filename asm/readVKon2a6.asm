@@ -201,7 +201,7 @@ ReadSequence:
 ++	mov y,#$00
 	mov a,(ReadSeq)+y
 	bne +
-	jmp VoiceInterrupt
+;	jmp VoiceInterrupt
 +	bmi +
 	cmp a,#$60
 	bmi ++
@@ -246,6 +246,7 @@ KonamiNoteEvent:
 	call RoutineHexDecimal
 	jmp FinishCom
 
+
 KonamiVoiceEvent0:
 	and a,#$1f ;60-7f
 	bne +
@@ -255,8 +256,11 @@ KonamiVoiceEvent0:
 	bne +
 	mov DPKitFlag,#$00
 	jmp FinishCom
-+	
-	jmp FinishCom ;todo: add tuning converter here
++	cmp a,#$02 ;62 gain
+	bne +
+	inc y
++	jmp FinishCom ;todo: add tuning converter here
+
 
 KonamiVoiceEvent1:
 	and a,#$1f ;e0-ff
@@ -282,9 +286,9 @@ PresetKonamiIndex1:
 	dw VcmdEAbpm	;ea
 	dw VcmdEBbpmfade	;eb
 	dw VcmdECkeydiff	;ec
-	dw VcmdED	;ed
+	dw VcmdEDads1	;ed
 	dw VcmdEEvol	;ee
-	dw VcmdEF	;ef
+	dw VcmdEFvlfade	;ef
 	dw VcmdF0porta	;f0
 	dw VcmdF1envb	;f1
 	dw VcmdF2fine	;f2
@@ -293,7 +297,7 @@ PresetKonamiIndex1:
 	dw VcmdF5echo2	;f5
 	dw VcmdF6voltaSet	;f6
 	dw VcmdF7voltaCall	;f7
-	dw VcmdF8	;f8
+	dw VcmdF8pnfade	;f8
 	dw VcmdF9	;f9
 	dw VcmdFAadsrg	;fa
 	dw VcmdFB	;fb
@@ -321,6 +325,10 @@ VcmdE0rest:	;e0
 
 
 VcmdE1tie:	;e1
+	mov a,#$5e ;^
+	call RoutineWriter
+	mov a,#$3d ;=
+	call RoutineWriter
 	inc y
 	inc y ;param 2 (velocity)
 	mov a,(ReadSeq)+y
@@ -329,10 +337,6 @@ VcmdE1tie:	;e1
 	mov a,(ReadSeq)+y ;param1 (note len)
 	mov DPNoteLength,a
 	call RoutineHexDecimal
-	mov a,#$5e ;^
-	call RoutineWriter
-	mov a,#$3d ;=
-	call RoutineWriter
 	inc y
 	jmp FinishCom
 
@@ -347,12 +351,12 @@ VcmdE2inst:	;e2
 
 
 VcmdE3pan:	;e3
-	mov a,#$db
-	call RoutineWriteHex
+	mov a,#$79 ;y
+	call RoutineWriter
 	inc y
 	mov a,(ReadSeq)+y ;param1
 	lsr a
-	call RoutineWriteHex
+	call RoutineHexDecimal
 	jmp FinishCom
 
 
@@ -385,6 +389,10 @@ VcmdE5:	;e5
 
 
 VcmdE6lp1start:
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	mov a,#$20 ;start double bracket
 	call RoutineWriter
 	mov a,#$5b ;start double bracket
@@ -410,6 +418,10 @@ VcmdE7lp1end:
 +	call RoutineHexDecimal
 	inc y ;skip unknown 
 	inc y
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	jmp FinishCom
 	
 
@@ -439,6 +451,10 @@ VcmdE9lp2end:	;e9
 +	call RoutineHexDecimal
 	inc y ;skip unknown 
 	inc y
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	jmp FinishCom
 
 
@@ -492,23 +508,32 @@ VcmdECkeydiff: ;ec
 	jmp FinishCom
 
 
-VcmdED:	;ed
--	nop
-	bra -
-
+VcmdEDads1:	;ed
+	inc y
+	jmp FinishCom
+	
 
 VcmdEEvol:	;ee
-	mov a,#$e7
-	call RoutineWriteHex
+	mov a,#$76 ;v
+	call RoutineWriter
 	inc y
 	mov a,(ReadSeq)+y ;param1
-	call RoutineWriteHex
+	call RoutineHexDecimal
 	jmp FinishCom
 
 
-VcmdEF:	;ef
--	nop
-	bra -
+VcmdEFvlfade:	;ef
+	mov a,#$e8
+	call RoutineWriteHex
+	inc y
+	inc y
+	mov a,(ReadSeq)+y ;param2 fade
+	call RoutineWriteHex
+	dec y
+	mov a,(ReadSeq)+y ;param1 target
+	call RoutineWriteHex
+	inc y
+	jmp FinishCom
 
 
 VcmdF0porta:	;f0
@@ -551,7 +576,7 @@ VcmdF3bend:	;f3
 	mov a,(ReadSeq)+y ;param3 note
 	eor a,#$80
 	setc
-	sbc a,#$0c
+	sbc a,#$18
 	call RoutineWriteHex
 	inc y ;skip deltas
 	inc y
@@ -627,9 +652,19 @@ RoutineGetVolta:
 	ret
 
 
-VcmdF8:	;f8
--	nop
-	bra -
+VcmdF8pnfade:	;f8
+	mov a,#$dc
+	call RoutineWriteHex
+	inc y
+	inc y
+	mov a,(ReadSeq)+y ;param2 fade
+	call RoutineWriteHex
+	dec y
+	mov a,(ReadSeq)+y ;param1 target
+	lsr a
+	call RoutineWriteHex
+	inc y
+	jmp FinishCom
 
 
 VcmdF9:	;f9
@@ -668,11 +703,11 @@ VcmdFB:	;fb
 
 
 VcmdFCvolprog:	;fc
-	mov a,#$e7
-	call RoutineWriteHex
+	mov a,#$76 ;v
+	call RoutineWriter
 	inc y
 	mov a,(ReadSeq)+y ;param1
-	call RoutineWriteHex
+	call RoutineHexDecimal
 	mov a,#$da
 	call RoutineWriteHex
 	inc y
@@ -688,6 +723,10 @@ VcmdFDjmp:	;fd
 
 
 VcmdFEsubcall:	;fe
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	inc y
 	mov a,(ReadSeq)+y
 	push a
@@ -696,8 +735,8 @@ VcmdFEsubcall:	;fe
 	push a
 	mov a,#$01
 	mov DPSubFlag,a ;store repeat calls for later
-	mov a,#$5b
-	call RoutineWriter
+;	mov a,#$5b
+;	call RoutineWriter
 	inc y
 	call RoutineUpdateWord
 	movw ya,ReadSeq
@@ -738,6 +777,14 @@ ForceInterrupt:
 	mov DPNoteKey,#$00
 	mov DPNoteTrans,#$00
 	mov DPVoltaFlag,#$00
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	mov a,#$23 ;# start a new channel
 	call RoutineWriter
 	mov a,ReadTrackX
@@ -749,80 +796,13 @@ ForceInterrupt:
 	jmp KonvertReadPattern
 
 ++	call RoutineCloseLoop
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	movw ya,BackSeq
 	movw ReadSeq,ya
 	jmp ReadSequence
-
-
-VoiceNoteEvent: ;01-DF
-	mov a,(ReadSeq)+y ;read note
-	cmp a,#$4a ;drums (4A-5F)
-	bmi +
-	push a
-	mov a,#$40 ;\@ setup drum kits
-	call RoutineWriter
-	mov a,#$32
-	call RoutineWriter
-	pop a
-	setc
-	sbc a,#$49
-	mov x,a
-	mov a,PresetHex+x
-	call RoutineWriter
-	mov a,#$24
-+	call RoutineGetNote 
-++	mov a,#$3d ;=
-	call RoutineWriter
-	mov a,DPNoteLength ;convert hex to decimal length (up to =127 supported)
-+++	mov DPNoteTens,#$00
-	mov DPNoteHund,#$00
--	inc DPNoteTens
-	setc
-	sbc a,#$0a
-	bcs -
-	adc a,#$0a
-	dec DPNoteTens
-+	mov DPStack,a
--	mov a,DPNoteTens
-	cmp a,#$10
-	bmi ++
-	inc DPNoteHund
-	clrc
-	and DPNoteTens,#$0f
-	adc DPNoteTens,#$06
-	bra -
-++	xcn a
-	and a,#$f0
-	clrc
-	adc a,DPStack
-	daa a
-	bcc +
-	inc DPNoteHund
-+	mov DPNoteTens,a
-	mov a,DPNoteHund
-	beq +
-	mov x,a
-	mov a,PresetHex+x
-	call RoutineWriter ;write hundreds (if given)
-+	mov a,DPNoteTens
-	and a,#$f0
-	xcn a
-;	beq +
-	mov x,a
-	mov a,PresetHex+x
-	call RoutineWriter ;write tens (if given)
-+	mov a,DPNoteTens
-	and a,#$0f
-	mov x,a
-	mov a,PresetHex+x
-	call RoutineWriter ;write ones (mandatory)
-	inc y
-	call RoutineUpdateWord
-	call RoutineMeasurePat
-	mov DPOctLatest,DPNoteOctave
-	jmp ReadSequence
--	nop
-	bra -
 
 
 PresetHex: ;direct hex to ascii conversion table
@@ -845,10 +825,10 @@ PresetNotes: ;note definition per octave
 
 
 RoutineCloseLoop:
-	mov a,#$5d ;close bracket
-	call RoutineWriter
-	mov a,DPSubFlag
-	call RoutineHexDecimal
+;	mov a,#$5d ;close bracket
+;	call RoutineWriter
+;	mov a,DPSubFlag
+;	call RoutineHexDecimal
 ---	dec DPSubFlag
 	cmp DPSubFlag,#$00
 	beq +++
@@ -954,7 +934,7 @@ RoutineWriteItself:
 RoutineGetNote:
 ;	clrc
 ;	adc a,#$04 ;correct to C neutral
-	mov DPNoteOctave,#$00
+	mov DPNoteOctave,#$ff
 -	cmp a,#$0c ;decrement until the last octave
 	bmi +
 	inc DPNoteOctave
@@ -995,7 +975,9 @@ RoutineGetForte:
 	mov a,#$71 ;q
 	call RoutineWriter
 	mov a,DPNoteParam
-	call RoutineWriteItself
+	bne +
+	mov a,#$10 ;bypass zero terminator in case
++	call RoutineWriteItself
 ++	ret
 
 
