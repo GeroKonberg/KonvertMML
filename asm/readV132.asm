@@ -41,10 +41,6 @@ DPOctLatest:
 skip 1
 DPNoteKey:
 skip 1
-DPNoteTens:
-skip 1
-DPNoteHund:
-skip 1
 DPStack:
 skip 1
 DPatPhrase: ;which phrase to take place at currently
@@ -63,13 +59,14 @@ DPSum2:
 skip 1
 DPQuant:
 skip 1
+DPatOuttime: ;measure lengths for splitting
+skip 2
+DPatOutpost: ;when to split output
+skip 2
 
 org !OutAddr+256
 base !OutAddr
-	db "#amk 4 #samples {#default }"
-	db $0d
-	db $0a
-	db "#0 "
+	db "#amk 4  #0  "
 
 org !ProgAddr+256
 base !ProgAddr ;bypass driver code with a converter
@@ -108,12 +105,15 @@ KonvertInit:
 	mov y,a
 	mov a,KonvertSet+3
 	movw WriteOut,ya
+	mov a,#$60
+	mov y,#$00
+	movw DPatOutpost,ya ;length of one bar (output)
 	jmp KonvertReadPattern
 
 KonvertSet:
 	dw !ReadAddr
 	db !ReadIndex
-	dw !OutAddr+32
+	dw !OutAddr+12
 
 KonvertReadPattern:
 	;read 2x8 pattern index from channel 0-7
@@ -156,6 +156,8 @@ ReadSequence:
 
 VoiceInterrupt: ;00, always return to a backup in third->second layer
 	call RoutineCloseLoop
+	mov DPatOuttime,#$00
+	mov DPatOuttime+1,#$00
 	movw ya,BackSeq
 	movw ReadSeq,ya
 	jmp ReadSequence
@@ -200,38 +202,14 @@ VoiceNoteEvent: ;01-DF
 	sbc a,#$4a
 	call RoutineWriteHex
 	mov a,#$24
-+	mov DPNoteOctave,#$01
--	cmp a,#$0c ;decrement until the last octave
-	bmi +
-	inc DPNoteOctave
-	setc
-	sbc a,#$0c
-	bra -
-+	mov DPNoteKey,a
-	cmp DPNoteOctave,DPOctLatest ;compare latest octave for truncation
-	beq +
-	mov a,#$6f ;o
-	call RoutineWriter
-	mov a,DPNoteOctave
-	mov x,a
-	mov a,PresetHex+x 
-	call RoutineWriter ;write octave of the key in ASCII
-+	mov a,DPNoteKey
-	asl a
-	mov x,a
-	mov a,PresetNotes+x
-	call RoutineWriter ;write note letter
-	mov a,PresetNotes+1+x
-	beq ++
-	call RoutineWriter ;account for sharps and flats
++	call RoutineGetNote 
 ++	mov a,#$3d ;=
 	call RoutineWriter
-	mov DPNoteTens,#$00
-	mov DPNoteHund,#$00
 	mov a,DPNoteLength ;convert hex to decimal length (up to =127 supported)
 -	call RoutineHexDecimal 
 	inc y
 	call RoutineUpdateWord
+	call RoutineMeasurePat
 	mov DPOctLatest,DPNoteOctave
 	jmp ReadSequence
 	
@@ -295,16 +273,16 @@ PresetVCMD: ;N-SPC to SMW VCMD conversion table [$D5-$FF]
 			;if zero, the writer will skip it immediatly
 	db $DA ;D5 instrument
 	db $00 ;D6 subroutine (handle externally)
-	db $E7 ;D7 song volume
+	db $00 ;D7 volume
 
 	db $ED ;D8 ADSR
-	db $DB ;D9 pan
+	db $00 ;D9 pan
 	db $DC ;DA pan fade
 	db $DD ;DB global transposition
 	db $00 ;DC (h) channel transposition 
 	db $00 ;DD loop point, handle externally
 	db $00 ;DE Terminate current track, increase ReadTrackX and continue up to 8
-	db $E2 ;DF tempo
+	db $00 ;DF tempo
 
 	db $DD ;E0 pitch slide
 	db $DE ;E1 vibrato on
@@ -313,25 +291,25 @@ PresetVCMD: ;N-SPC to SMW VCMD conversion table [$D5-$FF]
 	db $00 ;E4 skip2
 	db $00 ;E5 skip2
 
-	db $00 ;E6 skip1
-	db $00 ;E7 skip1
-	db $00 ;E8 skip1
-	db $00 ;E9 skip1
+	db $00 ;E6 quant 0
+	db $00 ;E7 quant 1
+	db $00 ;E8 quant 2
+	db $00 ;E9 quant 3
 
-	db $00 ;EA skip1
-	db $00 ;EB skip1
-	db $00 ;EC skip1
-	db $00 ;ED skip1
+	db $00 ;EA quant 4
+	db $00 ;EB quant 5
+	db $00 ;EC quant 6
+	db $00 ;ED quant 7
 
-	db $00 ;EE skip1
-	db $00 ;EF skip1
-	db $00 ;F0 skip1
-	db $00 ;F1 skip1
+	db $00 ;EE quant 8
+	db $00 ;EF quant 9
+	db $00 ;F0 quant A
+	db $00 ;F1 quant B
 
-	db $00 ;F2 skip1
-	db $00 ;F3 skip1
-	db $00 ;F4 skip1
-	db $00 ;F5 skip1
+	db $00 ;F2 quant C
+	db $00 ;F3 quant D
+	db $00 ;F4 quant E
+	db $00 ;F5 quant F
 
 	db $EF ;F6 echo p1
 	db $F0 ;F7 echo off
@@ -345,17 +323,17 @@ PresetVCMD: ;N-SPC to SMW VCMD conversion table [$D5-$FF]
 PresetVCMDIndex:
 	dw $0100 ;d5
 	dw VCMDSubroutine ;d6
-	dw $0100 ;d7
+	dw VCMDVolume ;d7
 
 	dw VCMDADSR ;d8
-	dw $0100 ;d9
+	dw VCMDPan ;d9
 	dw $0200 ;da
 	dw $0100 ;db
 
 	dw VCMDTranspose ;dc
 	dw VCMDLoopStart ;dd
 	dw VCMDLoopEnd ;de
-	dw $0100 ;df
+	dw VCMDTempo ;df
 
 	dw $0300 ;e0
 	dw $0300 ;e1
@@ -387,12 +365,43 @@ PresetVCMDIndex:
 	dw $0300 ;f6
 	dw $0000 ;f7
 
-	dw $0300 ;f8
+	dw VCMDEchoSetup ;f8
 	dw VoiceCommandParam ;f9
 	dw VCMDSkip1 ;fa
 	dw VCMDSkip2 ;fb
 
 	dw VCMDSkip1 ;fc
+
+
+FinishCom:
+	inc y
+	call RoutineUpdateWord
+	jmp ReadSequence
+
+VCMDVolume:
+	mov a,#$76  ;v
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	call RoutineHexDecimal
+	jmp FinishCom
+
+VCMDSongVol:
+	mov a,#$77  ;w
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	call RoutineHexDecimal
+	jmp FinishCom
+
+VCMDPan:
+	mov a,#$79  ;y
+	call RoutineWriter
+	inc y
+	mov a,(ReadSeq)+y
+	and a,#$3f ;todo: account for surround flags
+	call RoutineHexDecimal
+	jmp FinishCom
 
 VCMDQuantifier:
 	mov a,#$71 ;q
@@ -404,9 +413,28 @@ VCMDQuantifier:
 	clrc
 	adc a,DPQuant ;inherit previous quantization
 	call RoutineWriteItself
+	jmp FinishCom
+
+VCMDTempo:
+	mov a,#$74 ;t
+	call RoutineWriter
 	inc y
-	call RoutineUpdateWord
-	jmp ReadSequence
+	mov a,(ReadSeq)+y
+	dec a ;adapt tempo for carry
+	call RoutineHexDecimal
+	jmp FinishCom
+
+VCMDEchoSetup:
+	inc y
+	mov a,(ReadSeq)+y ;delay
+	call RoutineWriteHex
+	inc y
+	mov a,(ReadSeq)+y ;feedback
+	call RoutineWriteHex
+	inc y
+	mov a,#$01 ;FIR filter
+	call RoutineWriteHex
+	jmp FinishCom
 
 VCMDLoopStart:
 	mov a,#$2f
@@ -423,12 +451,15 @@ VCMDLoopEnd:
 	mov DPNoteOctave,#$00
 	mov DPNoteLength,#$00
 	mov DPNoteKey,#$00
+	call RoutineLineBreak
+	call RoutineLineBreak
 	mov a,#$23 ;# start a new channel
 	call RoutineWriter
 	mov a,ReadTrackX
 	mov x,a
 	mov a,PresetHex+x
 	call RoutineWriter
+	call RoutineLineBreak
 	movw ya,ReadPat
 	movw ReadSeq,ya 
 +	jmp KonvertReadPattern
@@ -446,9 +477,7 @@ VCMDTranspose: ;fa 02 -> h
 	setc
 	sbc a,DPStack
 +	call RoutineHexDecimal
-	inc y
-	call RoutineUpdateWord
-	jmp ReadSequence
+	jmp FinishCom
 
 VCMDADSR:
 	inc y
@@ -458,9 +487,7 @@ VCMDADSR:
 	inc y
 	mov a,(ReadSeq)+y
 	call RoutineWriteHex
-	inc y
-	call RoutineUpdateWord
-	jmp ReadSequence
+	jmp FinishCom
 
 VCMDSubroutine:
 	inc y
@@ -484,8 +511,6 @@ VCMDSubroutine:
 	movw ReadSeq,ya ;read from subroutine
 	jmp ReadSequence
 
--	nop
-	bra -
 
 VCMDSkip2:
 	inc y
@@ -500,6 +525,31 @@ RoutineCloseLoop:
 	mov a,DPSubFlag
 	call RoutineHexDecimal
 	mov DPSubFlag,#$00
+	call RoutineLineBreak
+	ret
+
+RoutineMeasurePat:
+	mov a,DPNoteLength ;measure length of output
+	clrc
+	adc a,DPatOuttime
+	bcc +
+	inc DPatOuttime+1
++	mov DPatOuttime,a
+--	movw ya,DPatOuttime
+	cmpw ya,DPatOutpost ;check if output timer passes one measure, add blanks to differenciate
+	bmi ++
+	subw ya,DPatOutpost
+	movw DPatOuttime,ya
+	call RoutineLineBreak
+	bra --
+++	ret
+
+RoutineLineBreak:
+	mov DPNoteOctave,#$7f
+	mov a,#$20
+	call RoutineWriter
+	mov a,#$20
+	call RoutineWriter
 	ret
 
 RoutineUpdateWord:
@@ -547,6 +597,34 @@ RoutineWriteItself:
 	mov a,PresetHex+y
 	call RoutineWriter
 	pop y
+	ret
+
+RoutineGetNote:
+	mov DPNoteOctave,#$01
+-	cmp a,#$0c ;decrement until the last octave
+	bmi +
+	inc DPNoteOctave
+	setc
+	sbc a,#$0c
+	bra -
++	mov DPNoteKey,a
+	cmp DPNoteOctave,DPOctLatest ;compare latest octave for truncation
+	beq +
+	mov a,#$6f ;o
+	call RoutineWriter
+	mov a,DPNoteOctave
+	mov x,a
+	mov a,PresetHex+x 
+	call RoutineWriter ;write octave of the key in ASCII
++	mov a,DPNoteKey
+	asl a
+	mov x,a
+	mov a,PresetNotes+x
+	call RoutineWriter ;write note letter
+	mov a,PresetNotes+1+x
+	beq ++
+	call RoutineWriter ;account for sharps and flats
+++	mov DPOctLatest,DPNoteOctave
 	ret
 
 RoutineHexDecimal:
