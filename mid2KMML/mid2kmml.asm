@@ -31,7 +31,7 @@ DPNoteKey: ;08
 skip 1
 DPStack1: ;09
 skip 1
-DPStack2: ;0A
+DPStackLen: ;0A
 skip 1
 DPSum1: ;0B
 skip 1
@@ -116,8 +116,8 @@ KonvertProcessInit:
 	mov y,a
 	mov a,KonvertInit-2
 	movw WriteOut,ya
-	mov a,#$80
-	mov y,#$01
+	mov a,#$c0
+	mov y,#$00
 	movw DPatOutpost,ya ;length of one 4/4 bar (output)
 	mov y,#$17 ;skip header shenanigans
 	
@@ -172,7 +172,27 @@ ReadNoteOff:
 	jmp CheckDelta
 
 ReadNoteOn:
-	inc y
+	mov a,#$00
+--	cmp DPRemainder,#$02 ;even out lost ticks by 2s
+	bmi ++
+	inc a
+	clrc
+	inc DPatOuttime
+	bcc +
+	inc DPatOuttime+1
++	dec DPRemainder
+	dec DPRemainder
+	bra --
+++	cmp a,#$00
+	beq ++
+	push a
+	mov a,#$72 ;r
+	call RoutineWriter
+	mov a,#$3d ;=
+	call RoutineWriter
+	pop a
+	call RoutineHexDecimal
+++	inc y
 	inc y
 	mov a,(ReadSeq)+y ;get velocity
 	lsr a
@@ -229,7 +249,7 @@ ReadController:
 
 PresetControllers:
 	dw CheckDelta
-	dw CC01mod
+	dw CheckDelta ;CC01mod
 	dw CheckDelta
 	dw CheckDelta
 	dw CheckDelta
@@ -241,20 +261,20 @@ PresetControllers:
 	dw CC0Apan
 	dw CC0Bexp
 	
-CC01mod:
-	cmp a,DPLatestMod
-	beq ++
-	mov DPLatestMod,a
-	mov a,#$de
-	call RoutineWriteHex
-	mov a,DPLatestMod
-	lsr a
-	call RoutineWriteHex
-	mov a,#$0c
-	call RoutineWriteHex
-	mov a,DPLatestMod
-	call RoutineWriteHex
-++	jmp CheckDelta
+;CC01mod:
+;	cmp a,DPLatestMod
+;	beq ++
+;	mov DPLatestMod,a
+;	mov a,#$de
+;	call RoutineWriteHex
+;	mov a,DPLatestMod
+;	lsr a
+;	call RoutineWriteHex
+;	mov a,#$0c
+;	call RoutineWriteHex
+;	mov a,DPLatestMod
+;	call RoutineWriteHex
+;++	jmp CheckDelta
 
 ;CC02breath:
 ;-	nop
@@ -414,7 +434,7 @@ ReadDelta: ;wait for next event in ties
 --	dec a
 	bmi ++
 	push a
-	mov DPStack2,#$80
+	mov DPStackLen,#$80
 	call RoutineCalcDelta
 	pop a
 	bra --
@@ -422,7 +442,7 @@ ReadDelta: ;wait for next event in ties
 ++	inc y
 	mov a,(ReadSeq)+y
 	bmi --
-+++ mov DPStack2,a
++++ mov DPStackLen,a
 	call RoutineCalcDelta
 	jmp FinishCom
 
@@ -430,12 +450,13 @@ ReadDelta: ;wait for next event in ties
 RoutineCalcDelta:
 	cmp ReadTrackX,#$ff
 	beq +++
-	mov a,DPStack2
+	mov a,DPStackLen
 	clrc
 	lsr a
 	bcc +
 	inc DPRemainder
-+	cmp DPBypass,#$00 ;skip tie on initial note events
++	mov DPStackLen,a
+	cmp DPBypass,#$00 ;skip tie on initial note events
 	bne ++
 	cmp a,#$00
 	beq +++
@@ -445,15 +466,19 @@ RoutineCalcDelta:
 	call RoutineWriter
 ++	mov a,#$3d ;=
 	call RoutineWriter
-	mov a,DPStack2
-	clrc
-	lsr a
+	mov a,DPStackLen
+;	clrc
+;	lsr a
 ;	bcc +
 ;	inc DPRemainder
+--
 +	cmp DPRemainder,#$02 ;even out lost ticks by 2s
 	bmi +
 	inc a
-	mov DPRemainder,#$00
+	inc DPStackLen
+	dec DPRemainder
+	dec DPRemainder
+	bra --
 +	call RoutineHexDecimal
 	mov DPBypass,#$00
 	call RoutineMeasurePat
@@ -463,14 +488,14 @@ RoutineCalcDelta:
 RoutineMeasurePat:
 	push y
 
-	mov a,DPStack2 ;measure length of current pattern
+	mov a,DPStackLen ;measure length of current pattern
 	clrc
 	adc a,DPatRuntime
 	bcc +
 	inc DPatRuntime+1
 +	mov DPatRuntime,a
 
-++	mov a,DPStack2 ;measure length of output
+++	mov a,DPStackLen ;measure length of output
 	clrc
 	adc a,DPatOuttime
 	bcc +
@@ -494,7 +519,7 @@ RoutineMeasurePat:
 ++	cmp ReadTrackX,#$00 ;measure initial pattern lengths on track 0 per phrase
 	bne ++
 	mov x,#$00
-	mov a,DPStack2
+	mov a,DPStackLen
 	clrc
 	adc a,DPatLength+x
 	bcc +
