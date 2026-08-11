@@ -67,6 +67,8 @@ DPRemainder: ;1E
 skip 1
 DPBarSplit: ;1F
 skip 1
+DPLatestNote: ;20
+skip 1
 
 org $0200
 base $0100 ;one page
@@ -80,7 +82,7 @@ base $0200 ;write page
 
 HeaderSQ:
 FormatSQ: ;write out
-skip 5120
+skip 8000
 skip align 256
 LoadMIDI: ;load song
 	incbin "input.mid"
@@ -162,6 +164,10 @@ FinishCom:
 	jmp ReadSequence
 
 ReadNoteOff:
+	mov y,#$01
+	mov a,(ReadSeq)+y 
+	cmp a,DPLatestNote ;check previous note, don't rest if it's any different
+	bne +++
 	mov y,#$03
 	mov a,(ReadSeq)+y ;compare delta
 	beq ---
@@ -169,7 +175,9 @@ ReadNoteOff:
 	call RoutineWriter
 	inc DPBypass
 	dec y
-	jmp CheckDelta
+--	jmp CheckDelta
++++	inc y
+	bra --
 
 ReadNoteOn:
 	mov a,#$00
@@ -208,6 +216,7 @@ ReadNoteOn:
 	call RoutineWriteItself
 ++	dec y 
 	mov a,(ReadSeq)+y ;get note number
+	mov DPLatestNote,a
 	cmp DPPercFlag,#$00 ;check for drum mode
 	beq ++
 	and a,#$0f
