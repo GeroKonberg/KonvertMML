@@ -203,16 +203,15 @@ ReadNoteOn:
 ++	inc y
 	inc y
 	mov a,(ReadSeq)+y ;get velocity
-	lsr a
-	lsr a
-	lsr a
+	asl a
+	mov x,a
+	mov a,PresetVelocity+x
 	cmp a,DPLatestForte
 	beq ++
 	mov DPLatestForte,a
 	mov a,#$71 ;q
 	call RoutineWriter
 	mov a,DPLatestForte
-	or a,#$70
 	call RoutineWriteItself
 ++	dec y 
 	mov a,(ReadSeq)+y ;get note number
@@ -415,7 +414,7 @@ ReadMetaEvent:
 	call RoutineWriter
 	pop a
 	push y
-	mov y,#$a4
+	mov y,#$72
 	mul ya
 	mov a,y
 	dec a ;adjust for tempo offset
@@ -698,6 +697,28 @@ PresetNotes: ;note definition per octave
 	db "a",$00
 	db "a+"
 	db "b",$00
+
+PresetVelocity:
+	db $10,$10,$10,$10, $10,$10,$10,$10, $10,$10,$10,$10, $10,$10,$10,$10 ;00-0f
+	db $10,$10,$10,$10, $10,$10,$10,$10, $10,$70,$70,$70, $70,$70,$70,$70 ;10-1f
+	db $70,$70,$70,$70, $70,$70,$70,$70, $70,$70,$70,$70, $70,$70,$70,$70 ;20-2f
+	db $70,$70,$70,$70, $71,$71,$71,$71, $71,$71,$71,$71, $71,$71,$71,$71 ;30-3f
+	
+	db $71,$71,$71,$71, $71,$71,$71,$71, $71,$71,$71,$71, $72,$72,$72,$72 ;40-4f
+	db $72,$72,$72,$72, $72,$72,$72,$72, $72,$72,$72,$72, $72,$72,$72,$72 ;50-5f
+	db $72,$72,$72,$72, $72,$72,$73,$73, $73,$73,$73,$73, $73,$73,$73,$73 ;60-6f
+	db $73,$73,$74,$74, $74,$74,$74,$74, $74,$74,$74,$74, $74,$74,$74,$75 ;70-7f
+	
+	db $75,$75,$75,$75, $75,$75,$75,$75, $75,$75,$75,$75, $76,$76,$76,$76 ;80-8f
+	db $76,$76,$76,$76, $76,$76,$76,$76, $76,$77,$77,$77, $77,$77,$77,$77 ;90-9f
+	db $77,$77,$77,$77, $77,$78,$78,$78, $78,$78,$78,$78, $78,$78,$78,$78 ;a0-af
+	db $78,$78,$79,$79, $79,$79,$79,$79, $79,$79,$79,$79, $79,$79,$79,$7a ;b0-bf
+
+	db $7a,$7a,$7a,$7a, $7a,$7a,$7a,$7a, $7a,$7a,$7a,$7a, $7b,$7b,$7b,$7b ;c0-cf
+	db $7b,$7b,$7b,$7b, $7b,$7b,$7b,$7b, $7c,$7c,$7c,$7c, $7c,$7c,$7c,$7c ;d0-df
+	db $7c,$7c,$7c,$7c, $7c,$7d,$7d,$7d, $7d,$7d,$7d,$7d, $7d,$7d,$7d,$7d ;e0-ef
+	db $7d,$7d,$7e,$7e, $7e,$7e,$7e,$7e, $7e,$7e,$7e,$7e, $7e,$7e,$7e,$7e ;f0-ff
+
 
 PresetVolumes: ;convert linear to exponential accordingly
 	db $00,$18,$1d,$21, $25,$29,$2c,$2f, $31,$34,$37,$39, $3b,$3d,$3f,$42 ;00-0f
