@@ -206,6 +206,16 @@ ReadNoteOn:
 	asl a
 	mov x,a
 	mov a,PresetVelocity+x
+	and a,#$0f
+	xcn a
+	or a,#$0f
+	mov x,a
+	mov a,PresetVolumes+x
+	lsr a
+	lsr a
+	lsr a
+	lsr a
+	or a,#$70
 	cmp a,DPLatestForte
 	beq ++
 	mov DPLatestForte,a
@@ -717,7 +727,7 @@ PresetVelocity:
 	db $7a,$7a,$7a,$7a, $7a,$7a,$7a,$7a, $7a,$7a,$7a,$7a, $7b,$7b,$7b,$7b ;c0-cf
 	db $7b,$7b,$7b,$7b, $7b,$7b,$7b,$7b, $7c,$7c,$7c,$7c, $7c,$7c,$7c,$7c ;d0-df
 	db $7c,$7c,$7c,$7c, $7c,$7d,$7d,$7d, $7d,$7d,$7d,$7d, $7d,$7d,$7d,$7d ;e0-ef
-	db $7d,$7d,$7e,$7e, $7e,$7e,$7e,$7e, $7e,$7e,$7e,$7e, $7e,$7e,$7e,$7e ;f0-ff
+	db $7d,$7d,$7e,$7e, $7e,$7e,$7e,$7e, $7e,$7e,$7e,$7e, $7f,$7f,$7f,$7f ;f0-ff
 
 
 PresetVolumes: ;convert linear to exponential accordingly
